@@ -1,0 +1,11 @@
+/**
+ * author waynewu
+ */
+
+include 'parsec-constraint-validators'
+include 'parsec-logging'
+include 'parsec-config'
+include 'parsec-clients'
+include 'parsec-validation'
+
+rootProject.name = 'parsec-utils'

@@ -1,0 +1,62 @@
+/**
+ * @author waynewu
+ */
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7'
+    }
+}
+
+allprojects {
+
+    group = 'com.yahoo.parsec'
+
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+    apply plugin: 'maven'
+
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+
+}
+
+subprojects {
+    apply plugin: 'com.jfrog.bintray'
+
+    bintray {
+        user = bintrayUser
+        key = bintrayKey
+
+        publications = ['UnofficialPublication']
+
+        publish = true
+        override = false //there's a bug
+
+        pkg {
+            repo = bintrayRepo
+            name = project.name
+            licenses = ['Apache-2.0']
+            vcsUrl = temporaryVcsUrl
+        }
+
+        pkg.version {
+            name = project.version
+        }
+    }
+
+    publishing {
+        publications {
+            UnofficialPublication(MavenPublication) {
+                from components.java
+            }
+        }
+    }
+
+    bintrayUpload.dependsOn check
+}

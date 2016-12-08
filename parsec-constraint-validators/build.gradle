@@ -1,0 +1,9 @@
+
+dependencies {
+    compile group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final'
+
+    testCompile group: 'org.testng'   , name: 'testng'              , version: '6.8.1'
+    testCompile group: 'org.hibernate', name: 'hibernate-validator' , version: '4.3.0.Final'
+}
+
+test.useTestNG()
