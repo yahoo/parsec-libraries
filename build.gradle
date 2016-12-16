@@ -7,7 +7,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
 
@@ -30,14 +30,13 @@ subprojects {
     apply plugin: 'com.jfrog.bintray'
 
     bintray {
-        user = bintrayUser
-        key = bintrayKey
+        user = System.getenv('BINTRAY_USER')
+        key = System.getenv('BINTRAY_API_KEY')
 
         publications = ['UnofficialPublication']
 
         publish = true
-        override = false //there's a bug
-
+        override = false
         pkg {
             repo = bintrayRepo
             name = project.name
