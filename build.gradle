@@ -41,8 +41,9 @@ subprojects {
         pkg {
             repo = bintrayRepo
             name = project.name
+            userOrg = 'yahoo'
             licenses = ['Apache-2.0']
-            vcsUrl = temporaryVcsUrl
+            vcsUrl = parsecVcsUrl
         }
 
         pkg.version {
