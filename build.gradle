@@ -32,7 +32,6 @@ subprojects {
     bintray {
         user = System.getenv('BINTRAY_USER')
         key = System.getenv('BINTRAY_API_KEY')
-        println(' ================  build user ==============> ' + user)
         publications = ['UnofficialPublication']
 
         publish = true
