@@ -45,7 +45,7 @@ subprojects {
         }
 
         pkg.version {
-            name = project.version
+            name = project.property("versionPrefix") + System.getenv('TRAVIS_BUILD_NUMBER') + '-unofficial'
         }
     }
 
