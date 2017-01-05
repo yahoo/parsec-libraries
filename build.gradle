@@ -1,15 +1,17 @@
 /**
  * @author waynewu
  */
-
 buildscript {
     repositories {
         jcenter()
     }
     dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3'
     }
 }
+
+apply plugin: 'io.codearte.nexus-staging'
 
 allprojects {
 
@@ -23,11 +25,11 @@ allprojects {
         mavenCentral()
         jcenter()
     }
-
 }
 
 subprojects {
     apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'signing'
 
     bintray {
         user = System.getenv('BINTRAY_USER')
@@ -59,4 +61,66 @@ subprojects {
     }
 
     bintrayUpload.dependsOn check
+    version = project.version
+    archivesBaseName = project.name
+
+    task javadocJar(type: Jar) {
+        classifier = 'javadoc'
+        from javadoc
+    }
+
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives javadocJar, sourcesJar
+    }
+
+    signing {
+        sign configurations.archives
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+                pom.project {
+                  name 'Parsec Util Libraries'
+                  packaging 'jar'
+                  // optionally artifactId can be defined here 
+                  description 'The Parsec Libraries provides for web service build'
+                  url 'https://github.com/yahoo/parsec-libraries/'
+
+                  scm {
+                    connection 'scm:git:https://github.com/yahoo/parsec-libraries.git'
+                    developerConnection 'scm:git:https://github.com/yahoo/parsec-libraries.git'
+                    url 'https://github.com/yahoo/parsec-libraries/'
+                  }
+
+                  licenses {
+                    license {
+                      name 'The Apache License, Version 2.0'
+                      url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                  }
+
+                  developers {
+                    developer {
+                      id 'ec-lightyear-dev'
+                      name 'ec-lightyear-dev'
+                      email 'ec-lightyear-dev@yahoo-inc.com'
+                    }
+                  }
+                }
+            }
+        }
+    }
 }

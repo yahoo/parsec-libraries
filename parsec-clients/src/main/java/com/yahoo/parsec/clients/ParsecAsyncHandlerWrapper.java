@@ -71,7 +71,7 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
         extensions = (asyncHandler instanceof AsyncHandlerExtensions)
             ? (AsyncHandlerExtensions) asyncHandler : null;
         progressAsyncHandler = (asyncHandler instanceof ProgressAsyncHandler)
-            ? (ProgressAsyncHandler) asyncHandler : null;
+            ? (ProgressAsyncHandler<T>) asyncHandler : null;
         this.progress = new ParsecAsyncProgress();
         this.ningRequest = ningRequest;
         this.requestCount = 0;

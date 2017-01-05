@@ -21,17 +21,23 @@ public @interface LatLong {
 
     /**
      * the default error message.
+     *
+     * @return the default error message
      */
     String message() default "invalid LatLong";
 
     /**
      * the class groups to apply for validation.
+     *
+     * @return array of validation groups
      */
     Class<?>[] groups() default {
     };
 
     /**
      * the annotation payload.
+     *
+     * @return array of Payload classes
      */
     Class<? extends Payload>[] payload() default {
     };

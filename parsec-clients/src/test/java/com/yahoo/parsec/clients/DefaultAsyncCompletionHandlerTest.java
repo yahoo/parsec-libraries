@@ -12,8 +12,8 @@ import javax.xml.ws.http.HTTPException;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -47,7 +47,7 @@ public class DefaultAsyncCompletionHandlerTest {
         when(mockResponse.getStatusCode()).thenReturn(200);
         when(mockResponse.hasResponseBody()).thenReturn(true);
         when(mockResponse.getResponseBody()).thenReturn("true");
-        when(mockObjectMapper.readValue(anyString(), any(Class.class))).thenReturn("true");
+        when(mockObjectMapper.readValue(anyString(), eq(String.class))).thenReturn("true");
 
         DefaultAsyncCompletionHandler<String> handler =
                 new DefaultAsyncCompletionHandler<>(String.class, mockObjectMapper);

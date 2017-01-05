@@ -3,11 +3,11 @@
 
 package com.yahoo.parsec.constraint.validators;
 
+import javax.validation.Constraint;
+import javax.validation.Payload;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import javax.validation.Constraint;
-import javax.validation.Payload;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -29,17 +29,23 @@ public @interface DateTime {
 
     /**
      * Default error message.
+     *
+     * @return the default error message
      */
     String message() default "invalid ISO 8601 date time";
 
     /**
      * Class groups to apply validation for.
+     *
+     * @return array of groups
      */
     Class<?>[] groups() default {
     };
 
     /**
      * Annotation payload.
+     *
+     * @return array of Payload classes
      */
     Class<? extends Payload>[] payload() default {
     };
