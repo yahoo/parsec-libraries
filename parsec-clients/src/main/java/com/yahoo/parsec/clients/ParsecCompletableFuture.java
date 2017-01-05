@@ -28,13 +28,13 @@ public class ParsecCompletableFuture<T> extends CompletableFuture<T> {
      */
     public ParsecCompletableFuture(final Future<T> future) {
         if (future instanceof com.ning.http.client.ListenableFuture) {
-            this.future = ListenableFutureAdapter.asGuavaFuture((com.ning.http.client.ListenableFuture) future);
+            this.future = ListenableFutureAdapter.asGuavaFuture((com.ning.http.client.ListenableFuture<T>) future);
         } else {
             this.future = future;
         }
 
         if (this.future instanceof ListenableFuture) {
-            Futures.addCallback((ListenableFuture) this.future, new FutureCallback<T>() {
+            Futures.addCallback((ListenableFuture<T>) this.future, new FutureCallback<T>() {
                 @Override
                 public void onSuccess(T result) {
                     complete(result);

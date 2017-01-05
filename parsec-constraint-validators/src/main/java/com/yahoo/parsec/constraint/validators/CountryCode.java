@@ -27,18 +27,24 @@ public @interface CountryCode {
 
     /**
      * the default error message.
+     *
+     * @return the default error message
      */
     String message() default "invalid country code, country code must follow "
             + "the iso 3166 standard and in lower case";
 
     /**
      * the class groups to apply for validation.
+     *
+     * @return array of validation groups
      */
     Class<?>[] groups() default {
     };
 
     /**
      * the annotation payload.
+     *
+     * @return array of Payload classes
      */
     Class<? extends Payload>[] payload() default {
     };
