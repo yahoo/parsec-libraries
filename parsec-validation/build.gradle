@@ -3,7 +3,7 @@ buildscript{
         mavenCentral()
     }
     dependencies{
-        classpath group: 'io.spring.gradle', name: 'dependency-management-plugin', version : '0.5.7.RELEASE'
+        classpath group: 'io.spring.gradle', name: 'dependency-management-plugin', version : '1.0.0.RC2'
     }
 }
 
