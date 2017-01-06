@@ -13,6 +13,10 @@ apply plugin: 'io.codearte.nexus-staging'
 ext.'ossrhUsername' = System.env.OSS_USER
 ext.'ossrhPassword' = System.env.OSS_PW
 
+nexusStaging {
+    username = ossrhUsername
+    password = ossrhPassword
+}
 
 project.gradle.startParameter.taskNames.each {
     if (it == "uploadArchives") {
