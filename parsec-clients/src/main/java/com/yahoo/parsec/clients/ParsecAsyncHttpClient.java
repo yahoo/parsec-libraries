@@ -434,7 +434,6 @@ public class ParsecAsyncHttpClient {
          */
         public Builder(final AsyncHttpClientConfig.Builder configBuilder) {
             this.configBuilder = configBuilder;
-            //this.configBuilder.addRequestFilter(new YRIDRequestFilter.Builder().build());
         }
 
         @Override

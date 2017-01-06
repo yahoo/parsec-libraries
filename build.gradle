@@ -1,6 +1,3 @@
-/**
- * @author waynewu
- */
 buildscript {
     repositories {
         jcenter()
@@ -12,6 +9,22 @@ buildscript {
 }
 
 apply plugin: 'io.codearte.nexus-staging'
+
+ext.'ossrhUsername' = System.env.OSS_USER
+ext.'ossrhPassword' = System.env.OSS_PW
+
+
+project.gradle.startParameter.taskNames.each {
+    if (it == "uploadArchives") {
+        ext.'signing.secretKeyRingFile' = "${rootDir}/mykey.gpg"
+        ext.'signing.password' = System.env.GPG_SIGN_PW
+        ext.'signing.keyId' = '13C55DD9'
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.3'
+}
 
 allprojects {
 
@@ -48,7 +61,15 @@ subprojects {
 
         pkg.version {
 //            name = project.property("versionPrefix") + System.getenv('TRAVIS_BUILD_NUMBER') + '-unofficial'
-            name = project.version
+            name = version
+            gpg {
+                sign = true
+            }
+            mavenCentralSync {
+                sync = false
+                user = ossrhUsername
+                password = ossrhPassword
+            }
         }
     }
 
@@ -61,7 +82,6 @@ subprojects {
     }
 
     bintrayUpload.dependsOn check
-    version = project.version
     archivesBaseName = project.name
 
     task javadocJar(type: Jar) {
@@ -79,6 +99,7 @@ subprojects {
     }
 
     signing {
+        required = false
         sign configurations.archives
     }
 
