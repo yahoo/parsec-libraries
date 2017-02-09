@@ -48,7 +48,11 @@ public class DefaultAsyncCompletionHandler<T> extends AsyncCompletionHandler<T> 
     public T onCompleted(Response response) throws Exception {
         if (expectedStatusCodes.contains(response.getStatusCode())) {
             if (response.hasResponseBody()) {
-                return objectMapper.readValue(response.getResponseBody(), tClass);
+                if (tClass == String.class) {
+                    return tClass.cast(response.getResponseBody());
+                } else {
+                    return objectMapper.readValue(response.getResponseBody(), tClass);
+                }
             }
             return null;
         } else {
