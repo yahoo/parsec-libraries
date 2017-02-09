@@ -7,6 +7,17 @@ buildscript {
     }
 }
 
+plugins {
+    id 'net.researchgate.release' version '2.5.0'
+}
+
+release {
+    failOnUnversionedFiles = false
+    failOnCommitNeeded = false
+    tagTemplate = '$name-$version'
+    newVersionCommitMessage = '[Gradle Release Plugin][ci skip] new version release:'
+}
+
 ext.'ossrhUsername' = System.env.OSS_USER
 ext.'ossrhPassword' = System.env.OSS_PW
 
