@@ -19,11 +19,11 @@ dependencies {
     }
     compile group: 'com.fasterxml.jackson.core'   , name: 'jackson-databind' , version: '2.7.3'
     compile group: 'org.slf4j'                    , name: 'slf4j-api'        , version: '1.7.12'
-    compile group: 'org.slf4j'                    , name: 'slf4j-log4j12'    , version: '1.7.12'
 
-    testCompile group: 'org.mockito'       , name: 'mockito-all' , version: '1.10.19'
-    testCompile group: 'org.testng'        , name: 'testng'      , version: '6.8.21'
-    testCompile group: 'org.eclipse.jetty' , name: 'jetty-server', version: '9.3.0.M2'
+    testCompile group: 'org.slf4j'         , name: 'slf4j-log4j12', version: '1.7.12'
+    testCompile group: 'org.mockito'       , name: 'mockito-all'  , version: '1.10.19'
+    testCompile group: 'org.testng'        , name: 'testng'       , version: '6.8.21'
+    testCompile group: 'org.eclipse.jetty' , name: 'jetty-server' , version: '9.3.0.M2'
 }
 
 test.useTestNG()
