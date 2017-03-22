@@ -14,7 +14,7 @@ public class ParsecConfigFactory {
     /**
      * environment context key.
      */
-    public static final String ENV_KEY = "parsec.config.env.context";
+    public static final String ENV_KEY = "parsec.conf.env.context";
 
     /**
      * hide constructor for maven checkstyle plugin advice.
