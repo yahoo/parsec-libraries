@@ -6,9 +6,11 @@ package com.yahoo.parsec.clients;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Response;
+import org.mockito.AdditionalAnswers;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
@@ -27,12 +29,27 @@ public class ParsecHttpRequestRetryCallableTest {
         when(mockClient.executeRequest(request.getNingRequest())).thenReturn(mockFuture);
     }
 
+    private void setMockClientReturnStatusCode(int [] returnStatusCodes) throws Exception {
+        List<ListenableFuture> futures = new ArrayList<>();
+
+        for (int returnStatusCode: returnStatusCodes) {
+            com.ning.http.client.Response response = mock(com.ning.http.client.Response.class);
+            when(response.getStatusCode()).thenReturn(returnStatusCode);
+            ListenableFuture future = mock(ListenableFuture.class);
+            when(future.get()).thenReturn(response);
+            futures.add(future);
+        }
+
+        when(mockClient.executeRequest(request.getNingRequest()))
+            .thenAnswer(AdditionalAnswers.returnsElementsOf(futures));
+    }
+
     @BeforeMethod
     @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
         mockResponse = mock(com.ning.http.client.Response.class);
-        mockClient = mock(AsyncHttpClient.class);
         mockFuture = mock(ListenableFuture.class);
+        mockClient = mock(AsyncHttpClient.class);
     }
 
     @Test
@@ -84,4 +101,26 @@ public class ParsecHttpRequestRetryCallableTest {
         assertEquals(responses.size(), 1);
         assertEquals(response.getStatusCode(), 200);
     }
+
+    @Test
+    public void testRetryAndSuccessBeforeReachMaxRetries() throws Exception {
+        request = new ParsecAsyncHttpRequest.Builder()
+            .addRetryStatusCode(408)
+            .setMaxRetries(3)
+            .build();
+        int [] returnStatusCodes = {408, 408, 200};
+        setMockClientReturnStatusCode(returnStatusCodes);
+
+        ParsecHttpRequestRetryCallable<Response> parsecHttpRequestRetryCallable =
+            new ParsecHttpRequestRetryCallable<>(mockClient, request);
+        Response response = parsecHttpRequestRetryCallable.call();
+        List<Response> responses = parsecHttpRequestRetryCallable.getResponses();
+
+        assertEquals(responses.size(), 3);
+        assertEquals(responses.get(0).getStatusCode(), 408);
+        assertEquals(responses.get(1).getStatusCode(), 408);
+        assertEquals(responses.get(2).getStatusCode(), 200);
+        assertEquals(response.getStatusCode(), 200);
+    }
+
 }
