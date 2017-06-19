@@ -14,7 +14,7 @@ script:
 - git config --global user.email "builds@travis-ci.com"
 - git config --global user.name "Travis CI"
 - if [ "${TRAVIS_PULL_REQUEST}" == "false" ];then git checkout master;git remote set-url origin "https://$GITHUBKEY@github.com/yahoo/parsec-libraries";./gradlew release;fi
-- test "${TRAVIS_PULL_REQUEST}" == "true" || test "${TRAVIS_BRANCH}" != "master" || ./gradlew bintrayUpload --debug --info
+- test "${TRAVIS_PULL_REQUEST}" == "true" || test "${TRAVIS_BRANCH}" != "master" || ./gradlew test --debug --info
 env:
   global:
   - secure: DtXOOq/+aHLjTvwPTMy8YfBUFgep8PgZ7C+PuSwfiIyx3HUef+PaEyQcafIdTSgYshh/qrNZYzcz+jCrayNdfxa2F5mSQu+NI9Dz9yY00vX/yyO/sEV1U60A9uxphQ8DrYLbg7GeBZ4+VIuW/LQxqKe0ugWTpfJ1kKF+ytaQpgpkfJmRE8eyvMWOjD34ruIWtXqqrNtl+/lySRqVkNRcymY0AhTiaGrBeEO6ki6hb/IcPgUt5sVj4p5iWrb/2dr6PcTbQ1N5xlp3zmlTnURgcz/6Pcor2UrQ1Iz35EsPtkifrsx0uP/X6Xnn/JURMhUcWfapSQZjxM8NDwUR4p8Jqaio1pgk4TOS2aZK0cd6vNW5bVN4jX014X6hiU8F6G4pRt7sDN3cmv7FX/mnNc+hIqxRa41p5vNxk63Vq37VmgT8wVULMiB1SWJ+A2TTdqSxB6U5G/qjI2ZyspfsLnLMEVMscjARtPobqdG7RcWZuQKk5buctasBLl71SF/4qDIssi/qsX2PHZjrrqpb8PbXYRGbUSXocsEBvyXjj532abu5onQiB/fsPaNfRcdWApi7g7Ap7j9sDeXCLlf9FxvAH3WyZLFSJQL2rUIKARM+SmUTPwwSlFobnLWah/GVOBRYn/l3+BdTLpC8CntB31GTLBCsALK+PAPOPcUv+y0BbGs=

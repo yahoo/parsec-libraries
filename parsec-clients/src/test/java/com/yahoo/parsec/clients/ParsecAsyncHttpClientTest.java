@@ -452,7 +452,6 @@ public class ParsecAsyncHttpClientTest {
         CompletableFuture<Response> future = client.execute(new ParsecAsyncHttpRequest.Builder()
                 .addBodyPart("key1", "val1")
                 .addBodyPart("key2", "val2", "text/plain", StandardCharsets.UTF_8)
-                        //.addBodyPart("photo", new File("/Users/guang/Desktop/測試.png"), "image/png")
                 .setUrl(baseUrl + "/200")
                 .setMethod("POST")
                 .build());
