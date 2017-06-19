@@ -100,9 +100,9 @@ class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
                 LOGGER.debug("Retry number: " + retries + " (max: " + maxRetries + ")");
                 retries++;
 
-                T retryResponse = executeRequest(ningRequest);
-                statusCode = getStatusCode(retryResponse);
-                responses.add(retryResponse);
+                response = executeRequest(ningRequest);
+                statusCode = getStatusCode(response);
+                responses.add(response);
             } else {
                 LOGGER.debug("Max retries reached: " + retries + " (max: " + maxRetries + ")");
                 break;
