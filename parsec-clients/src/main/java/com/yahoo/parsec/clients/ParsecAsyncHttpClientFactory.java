@@ -41,12 +41,7 @@ public final class ParsecAsyncHttpClientFactory {
      */
     public static ParsecAsyncHttpClient getInstance(final ParsecAsyncHttpClient.Builder builder) {
         return clientMap.computeIfAbsent(builder, b -> {
-            try {
-                return b.build();
-            } catch (ExecutionException e) {
-                LOGGER.debug("Unable to instantiate client instance");
-                throw new RuntimeException(e);
-            }
+            return b.build();
         });
     }
 
