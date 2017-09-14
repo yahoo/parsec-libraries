@@ -484,9 +484,8 @@ public class ParsecAsyncHttpClient {
          * Build new {@link ParsecAsyncHttpClient} instance.
          *
          * @return {@link ParsecAsyncHttpClient}
-         * @throws ExecutionException execution exception
          */
-        public ParsecAsyncHttpClient build() throws ExecutionException {
+        public ParsecAsyncHttpClient build() {
             return new ParsecAsyncHttpClient(this);
         }
 
