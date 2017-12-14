@@ -12,6 +12,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -477,5 +478,34 @@ public class ParsecAsyncHttpRequestTest {
         assertEquals(((FilePart)parts.get(2)).getFile().getName(), "ParsecAsyncHttpRequestTest.java");
         assertEquals(parts.get(3).getName(), "withContentType");
         assertEquals(((StringPart)parts.get(3)).getValue(), "{\"abc\":\"def\"}");
+    }
+
+    @Test
+    public void testQueryParam() throws Exception {
+        builder.addQueryParam("encodeParam","+param");
+        builder.addQueryParam("normalParam","param");
+        ParsecAsyncHttpRequest request  = builder.build();
+        Map<String, List<String>> queryParams = request.getQueryParams();
+        assertTrue(queryParams.containsKey("encodeParam"));
+        assertTrue(queryParams.containsKey("normalParam"));
+        assertEquals(2, queryParams.size());
+        assertEquals("[%2Bparam]", queryParams.get("encodeParam").toString());
+        assertEquals("[param]", queryParams.get("normalParam").toString());
+    }
+
+    @Test
+    public void testQueryParamFromUri() throws Exception {
+        UriBuilder uriBuilder = UriBuilder.fromUri("http://localhost");
+        uriBuilder.queryParam("encodeParam", "+param");
+        uriBuilder.queryParam("normalParam", "param");
+        URI uri = uriBuilder.build();
+        builder.setUri(uri);
+        ParsecAsyncHttpRequest request  = builder.build();
+        Map<String, List<String>> queryParams = request.getQueryParams();
+        assertTrue(queryParams.containsKey("encodeParam"));
+        assertTrue(queryParams.containsKey("normalParam"));
+        assertEquals(2, queryParams.size());
+        assertEquals("[%2Bparam]", queryParams.get("encodeParam").toString());
+        assertEquals("[param]", queryParams.get("normalParam").toString());
     }
 }
