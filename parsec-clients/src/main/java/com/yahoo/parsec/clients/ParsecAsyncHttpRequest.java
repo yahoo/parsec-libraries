@@ -628,7 +628,7 @@ public class ParsecAsyncHttpRequest {
                     uri.getHost(),
                     uri.getPort(),
                     uri.getPath(),
-                    uri.getQuery()
+                    uri.getRawQuery()
             ));
 
             if (body != null) {
