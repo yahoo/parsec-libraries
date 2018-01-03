@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 /**
  * {@link Callable} implementation that handles HTTP request retry based on response status code.
@@ -86,33 +85,52 @@ class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
         responses.clear();
         final Request ningRequest = request.getNingRequest();
         final List<Integer> retryStatusCodes = request.getRetryStatusCodes();
+        final List<Class<? extends Throwable>> retryExceptions = request.getRetryExceptions();
         final int maxRetries = request.getMaxRetries();
 
+        T response;
+        ExecutionException executionException;
+        InterruptedException interruptedException;
         int retries = 0;
         for (; ; ) {
-            T response;
+            response = null;
+            executionException = null;
+            interruptedException = null;
             try {
                 response = executeRequest(ningRequest);
-            } catch (Exception e) {
-                if (!(ExceptionUtils.getRootCause(e) instanceof TimeoutException)) {
+                responses.add(response);
+                int statusCode = getStatusCode(response);
+                if (statusCode == -1 || !retryStatusCodes.contains(statusCode)) {
+                    break;
+                }
+            } catch (ExecutionException e) {
+                Throwable root = ExceptionUtils.getRootCause(e);
+                if (!retryExceptions.contains(root.getClass())) {
                     throw e;
                 }
-                response = (T) new Response.status(404).build();
-            }
-
-            responses.add(response);
-            int statusCode = getStatusCode(response);
-            if (statusCode == -1 || !retryStatusCodes.contains(statusCode)) {
-                return response;
+                executionException = e;
+            } catch (InterruptedException e) {
+                Throwable root = ExceptionUtils.getRootCause(e);
+                if (!retryExceptions.contains(root.getClass())) {
+                    throw e;
+                }
+                interruptedException = e;
             }
 
             if (retries == maxRetries) {
                 LOGGER.debug("Max retries reached: " + retries + " (max: " + maxRetries + ")");
-                return response;
+                break;
             }
             retries++;
             LOGGER.debug("Retry number: " + retries + " (max: " + maxRetries + ")");
         }
+        if (executionException != null) {
+            throw executionException;
+        }
+        if (interruptedException != null) {
+            throw interruptedException;
+        }
+        return response;
     }
 
     /**
