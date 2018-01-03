@@ -126,6 +126,7 @@ public class JettyHttpTestServer {
             }
 
             response.setStatus(statusCode);
+            response.setHeader("Host", host);
             response.setHeader("ServerPort", Integer.toString(request.getServerPort()));
             response.setHeader("SocketPort", Integer.toString(port));
 
