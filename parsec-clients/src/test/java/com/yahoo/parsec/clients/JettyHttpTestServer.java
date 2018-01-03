@@ -19,6 +19,7 @@ import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collection;
+import java.util.concurrent.TimeoutException;
 
 
 /**
@@ -98,14 +99,31 @@ public class JettyHttpTestServer {
                 baseRequest.setAttribute(Request.__MULTIPART_CONFIG_ELEMENT, new MultipartConfigElement("/tmp"));
             }
 
-			String path = target.substring(1);
             int statusCode = 0;
 
-			try {
-				statusCode = Integer.parseInt(path);
-			} catch (Exception e) {
-                e.printStackTrace();
-			}
+            String path = target;
+            if (path.startsWith("/sleep/")) {
+                path = path.substring("/sleep/".length());
+                Integer millis = 0;
+                try {
+                    millis = Integer.parseInt(path);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                try {
+                    Thread.sleep(millis);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                statusCode = 200;
+            } else if (path.startsWith("/")) {
+                path = path.substring("/".length());
+                try {
+                    statusCode = Integer.parseInt(path);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
             response.setStatus(statusCode);
             response.setHeader("ServerPort", Integer.toString(request.getServerPort()));

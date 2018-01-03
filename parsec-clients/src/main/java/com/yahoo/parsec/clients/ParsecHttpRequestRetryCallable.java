@@ -77,11 +77,10 @@ class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
      * Check status code and handles retry if T is type {@link Response} or Ning {@link com.ning.http.client.Response}.
      *
      * @return T
-     * @throws InterruptedException Interrupted exception
-     * @throws ExecutionException   Execution exception
+     * @throws Exception exception
      */
     @Override
-    public T call() throws InterruptedException, ExecutionException {
+    public T call() throws Exception {
         responses.clear();
         final Request ningRequest = request.getNingRequest();
         final List<Integer> retryStatusCodes = request.getRetryStatusCodes();
@@ -89,13 +88,11 @@ class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
         final int maxRetries = request.getMaxRetries();
 
         T response;
-        ExecutionException executionException;
-        InterruptedException interruptedException;
+        Exception exception;
         int retries = 0;
         for (; ; ) {
             response = null;
-            executionException = null;
-            interruptedException = null;
+            exception = null;
             try {
                 response = executeRequest(ningRequest);
                 responses.add(response);
@@ -103,18 +100,12 @@ class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
                 if (statusCode == -1 || !retryStatusCodes.contains(statusCode)) {
                     break;
                 }
-            } catch (ExecutionException e) {
+            } catch (Exception e) {
                 Throwable root = ExceptionUtils.getRootCause(e);
                 if (!retryExceptions.contains(root.getClass())) {
                     throw e;
                 }
-                executionException = e;
-            } catch (InterruptedException e) {
-                Throwable root = ExceptionUtils.getRootCause(e);
-                if (!retryExceptions.contains(root.getClass())) {
-                    throw e;
-                }
-                interruptedException = e;
+                exception = e;
             }
 
             if (retries == maxRetries) {
@@ -124,11 +115,8 @@ class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
             retries++;
             LOGGER.debug("Retry number: " + retries + " (max: " + maxRetries + ")");
         }
-        if (executionException != null) {
-            throw executionException;
-        }
-        if (interruptedException != null) {
-            throw interruptedException;
+        if (exception != null) {
+            throw exception;
         }
         return response;
     }

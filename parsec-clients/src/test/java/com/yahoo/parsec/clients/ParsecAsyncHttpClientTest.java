@@ -384,6 +384,8 @@ public class ParsecAsyncHttpClientTest {
         Future<Response> future = client.execute(new ParsecAsyncHttpRequest.Builder()
                 .setUrl(baseUrl + "/200")
                 .addRetryStatusCode(500)
+                .addRetryException(TimeoutException.class)
+                .setMaxRetries(2)
                 .build());
 
         assertNotNull(future.get());
@@ -434,13 +436,28 @@ public class ParsecAsyncHttpClientTest {
     }
 
     @Test
-    public void testSingleRequestExecProfilingLogWithRetry() throws Exception {
+    public void testSingleRequestExecProfilingLogWithRetryOnStatusCode() throws Exception {
         ParsecAsyncHttpRequest request = new ParsecAsyncHttpRequest.Builder()
-                .setCriticalGet(true)
-                .setUrl(baseUrl + "/500")
-                .addRetryStatusCode(500)
-                .setMaxRetries(2)
-                .build();
+            .setCriticalGet(true)
+            .setUrl(baseUrl + "/500")
+            .addRetryStatusCode(500)
+            .setMaxRetries(2)
+            .build();
+
+        client.execute(request).get();
+        String host = request.getNingRequest().getHeaders().get(ParsecClientDefine.HEADER_HOST).toString();
+        assertNotNull(host);
+    }
+
+    @Test
+    public void testSingleRequestExecProfilingLogWithRetryOnException() throws Exception {
+        ParsecAsyncHttpRequest request = new ParsecAsyncHttpRequest.Builder()
+            .setCriticalGet(true)
+            .setUrl(baseUrl + "/sleep/25")
+            .addRetryException(TimeoutException.class)
+            .setRequestTimeout(10)
+            .setMaxRetries(2)
+            .build();
 
         client.execute(request).get();
         String host = request.getNingRequest().getHeaders().get(ParsecClientDefine.HEADER_HOST).toString();
