@@ -39,9 +39,14 @@ public class ParsecAsyncHttpRequest {
     private final int maxRetries;
 
     /**
-     * Response status codes tp retry.
+     * Response status codes to retry.
      */
     private final List<Integer> retryStatusCodes;
+
+    /**
+     * Exceptions to retry.
+     */
+    private final List<Class<? extends Throwable>> retryExceptions;
 
     /**
      * Cookies.
@@ -89,6 +94,7 @@ public class ParsecAsyncHttpRequest {
         criticalGet = builder.criticalGet;
         maxRetries = builder.maxRetries;
         retryStatusCodes = builder.retryStatusCodes;
+        retryExceptions = builder.retryExceptions;
         ningRequest = builder.ningRequestBuilder.build();
         acceptCompression = builder.acceptCompression;
 
@@ -289,6 +295,15 @@ public class ParsecAsyncHttpRequest {
     }
 
     /**
+     * Get retry exceptions.
+     *
+     * @return List of retry exceptions
+     */
+    public List<Class<? extends Throwable>> getRetryExceptions() {
+        return Collections.unmodifiableList(retryExceptions);
+    }
+
+    /**
      * Get URI.
      *
      * @return {@link URI}
@@ -406,6 +421,11 @@ public class ParsecAsyncHttpRequest {
         private List<Integer> retryStatusCodes;
 
         /**
+         * Exceptions to retry.
+         */
+        private List<Class<? extends Throwable>> retryExceptions;
+
+        /**
          * Query params.
          */
         private List<Param> queryParams;
@@ -479,6 +499,7 @@ public class ParsecAsyncHttpRequest {
             maxRetries = DEFAULT_MAX_RETRIES;
             headers = new FluentCaseInsensitiveStringsMap();
             retryStatusCodes = new ArrayList<>();
+            retryExceptions = new ArrayList<>();
             uri = URI.create("http://localhost");
             acceptCompression = true;
             bodyParts = new ArrayList<>();
@@ -551,6 +572,19 @@ public class ParsecAsyncHttpRequest {
             if (Response.Status.fromStatusCode(statusCode) != Response.Status.OK
                 && !retryStatusCodes.contains(statusCode)) {
                 retryStatusCodes.add(statusCode);
+            }
+            return this;
+        }
+
+        /**
+         * Add retry exception.
+         *
+         * @param exception Retry exception to add
+         * @return {@link ParsecAsyncHttpRequest.Builder}
+         */
+        public Builder addRetryException(Class<? extends Exception> exception) {
+            if (!retryExceptions.contains(exception)) {
+                retryExceptions.add(exception);
             }
             return this;
         }
@@ -701,6 +735,17 @@ public class ParsecAsyncHttpRequest {
          */
         public Builder removeRetryStatusCode(int statusCode) {
             retryStatusCodes.remove((Integer) statusCode);
+            return this;
+        }
+
+        /**
+         * Remove retry exception.
+         *
+         * @param exception Retry exception to remove
+         * @return {@link ParsecAsyncHttpRequest.Builder}
+         */
+        public Builder removeRetryException(Class<? extends Throwable> exception) {
+            retryExceptions.remove(exception);
             return this;
         }
 

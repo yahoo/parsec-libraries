@@ -146,7 +146,8 @@ public class ParsecAsyncHttpClient {
         ParsecAsyncHandlerWrapper<T> asyncHandlerWrapper =
                 new ParsecAsyncHandlerWrapper<>(asyncHandler, request.getNingRequest());
 
-        if (!request.getRetryStatusCodes().isEmpty()) {
+        if (!request.getRetryStatusCodes().isEmpty() ||
+            !request.getRetryExceptions().isEmpty()) {
             return new ParsecCompletableFuture<>(
                 executorService.submit(
                     new ParsecHttpRequestRetryCallable<>(
