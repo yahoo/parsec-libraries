@@ -54,7 +54,7 @@ subprojects {
             developer {
                 id "ec-lightyear-dev"
                 name "ec-lightyear-dev"
-                email "ec-lightyear-dev@yahoo-inc.com"
+                email "ec-lightyear-dev@oath.com"
             }
         }
 	    scm {
