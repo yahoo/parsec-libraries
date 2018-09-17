@@ -14,6 +14,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
@@ -333,6 +334,14 @@ public class ParsecAsyncHttpClient {
      */
     public String getUserAgent() {
         return ningClientConfig.getUserAgent();
+    }
+
+    /**
+     * Get SSL context.
+     * @return SSL Context
+     */
+    public SSLContext getSSLContext() {
+        return ningClientConfig.getSSLContext();
     }
 
     /**
@@ -695,6 +704,16 @@ public class ParsecAsyncHttpClient {
          */
         public Builder setUserAgent(String userAgent) {
             configBuilder.setUserAgent(userAgent);
+            return this;
+        }
+
+        /**
+         * Set ssl context.
+         * @param sslContext SSL context
+         * @return {@link ParsecAsyncHttpClient.Builder}
+         */
+        public Builder setSSLContext(SSLContext sslContext) {
+            configBuilder.setSSLContext(sslContext);
             return this;
         }
 

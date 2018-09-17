@@ -12,9 +12,11 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -333,6 +335,14 @@ public class ParsecAsyncHttpClientTest {
         // Test set and get
         client = new ParsecAsyncHttpClient.Builder().setUserAgent("UserFOR/1.0").build();
         assertEquals("UserFOR/1.0", client.getUserAgent());
+    }
+
+    @Test
+    public void testSetAndGetSSLContext() throws NoSuchAlgorithmException {
+        SSLContext mockSslContext = mock(SSLContext.class);
+        client = new ParsecAsyncHttpClient.Builder().setSSLContext(mockSslContext).build();
+
+        assertEquals(client.getSSLContext(), mockSslContext);
     }
 
     @Test
