@@ -469,6 +469,17 @@ public class ParsecAsyncHttpClientTest {
         assertNotNull(response.getHeaderString(ParsecClientDefine.HEADER_HOST));
     }
 
+    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp = "java.util.concurrent.TimeoutException.*")
+    public void testTimeoutShouldThrowTimeoutException() throws Exception {
+        ParsecAsyncHttpRequest request = new ParsecAsyncHttpRequest.Builder()
+                .setCriticalGet(true)
+                .setUrl(baseUrl + "/sleep/25")
+                .setRequestTimeout(10)
+                .build();
+
+        client.execute(request).get();
+    }
+
     @Test
     public void testSingleRequestExecWithRetryOnException() throws Exception {
         ParsecAsyncHttpRequest request = new ParsecAsyncHttpRequest.Builder()
