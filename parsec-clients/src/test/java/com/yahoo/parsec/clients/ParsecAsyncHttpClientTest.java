@@ -473,7 +473,7 @@ public class ParsecAsyncHttpClientTest {
     public void testTimeoutShouldThrowTimeoutException() throws Exception {
         ParsecAsyncHttpRequest request = new ParsecAsyncHttpRequest.Builder()
                 .setCriticalGet(true)
-                .setUrl(baseUrl + "/sleep/25")
+                .setUrl(baseUrl + "/sleep/300")
                 .setRequestTimeout(10)
                 .build();
 
