@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -75,7 +76,7 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
                 .willReturn(okJson(respBodyJson)));
 
 
-        String requestMethod = "GET";
+        String requestMethod = HttpMethod.GET;
         ParsecAsyncHttpRequest request = buildRequest(requestMethod,30000,
                 new URI(super.wireMockBaseUrl+url), new HashMap<>(), reqBodyJson);
 
@@ -95,7 +96,7 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
                 .withRequestBody(equalToJson(reqBodyJson))
                 .willReturn(okJson(respBodyJson)));
 
-        String requestMethod = "POST";
+        String requestMethod = HttpMethod.POST;
         ParsecAsyncHttpRequest request = buildRequest(requestMethod,300,
                 new URI(super.wireMockBaseUrl+url), new HashMap<>(), reqBodyJson);
 
