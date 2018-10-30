@@ -88,7 +88,7 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
     }
 
     @Test
-    public void testLoggingForPost() throws URISyntaxException, ExecutionException, InterruptedException {
+    public void criticalPostRequestShouldBeLogged() throws URISyntaxException, ExecutionException, InterruptedException {
 
         String url = "/post200";
         stubFor(post(urlEqualTo(url))
