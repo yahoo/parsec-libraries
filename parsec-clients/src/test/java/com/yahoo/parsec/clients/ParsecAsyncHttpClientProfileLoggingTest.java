@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.core.Appender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -20,7 +21,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -71,7 +71,7 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
     public void nonCriticalGetShouldBeLogged() throws URISyntaxException, ExecutionException, InterruptedException {
 
         String url = "/get200";
-        stubFor(get(urlEqualTo(url))
+        WireMock.stubFor(get(urlEqualTo(url))
                 .willReturn(okJson(respBodyJson)));
 
 
@@ -91,7 +91,7 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
     public void criticalPostRequestShouldBeLogged() throws URISyntaxException, ExecutionException, InterruptedException {
 
         String url = "/post200";
-        stubFor(post(urlEqualTo(url))
+        WireMock.stubFor(post(urlEqualTo(url))
                 .withRequestBody(equalToJson(reqBodyJson))
                 .willReturn(okJson(respBodyJson)));
 
