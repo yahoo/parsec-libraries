@@ -24,9 +24,8 @@ dependencies {
     testCompile group: 'org.hamcrest'       , name: 'java-hamcrest'  , version: '2.0.0.0'
     testCompile group: 'org.mockito'       , name: 'mockito-all'  , version: '1.10.19'
     testCompile group: 'org.testng'        , name: 'testng'       , version: '6.8.21'
-    testCompile group: 'org.eclipse.jetty' , name: 'jetty-server' , version: '9.3.0.M2'
+    testCompile group: 'org.eclipse.jetty' , name: 'jetty-server' , version: '9.3.11.v20160721'
     testCompile group: 'com.github.tomakehurst', name: 'wiremock-standalone', version: '2.18.0'
-
 }
 
 test.useTestNG()

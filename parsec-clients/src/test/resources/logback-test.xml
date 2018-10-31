@@ -18,5 +18,8 @@
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
     </root>
+
+    <!-- will be used in different tests -->
     <logger name="parsec.clients.profiling_log" level="trace" />
+    <logger name="parsec.clients.reqresp_log" level="trace" />
 </configuration>
