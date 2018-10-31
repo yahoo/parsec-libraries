@@ -106,7 +106,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
     }
 
     @Test
-    public void faultPostRequestShouldBeLogged() throws URISyntaxException {
+    public void faultyPostRequestShouldBeLogged() throws URISyntaxException {
 
         String url = "/postWithFilterAtFault";
         WireMock.stubFor(post(urlEqualTo(url))
