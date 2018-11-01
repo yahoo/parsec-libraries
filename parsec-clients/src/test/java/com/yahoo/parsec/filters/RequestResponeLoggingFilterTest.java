@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -39,9 +40,12 @@ import static org.hamcrest.Matchers.hasToString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 /**
  * Created by baiyi on 10/30/2018.
@@ -75,6 +79,31 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
 
         mockAppender = mock(Appender.class);
         logger.addAppender(mockAppender);
+    }
+
+    @Test
+    public void getRequestShouldNotBeLogged() throws ExecutionException, InterruptedException {
+
+        String url = "/getWithFilter200?param1=value1";
+        WireMock.stubFor(get(urlEqualTo(url))
+                .willReturn(okJson(stubRespBodyJson)));
+
+        String requestMethod = HttpMethod.GET;
+
+        Map<String, Collection<String>> headers = new HashMap<>();
+
+        ParsecAsyncHttpRequest request =
+                new ParsecAsyncHttpRequest.Builder()
+                        .setUrl(wireMockBaseUrl+url)
+                        .setHeaders(headers)
+                        .setRequestTimeout(300)
+                        .setMethod(requestMethod)
+                        .setBody("").setBodyEncoding("UTF-8").build();
+
+        Response response = parsecHttpClient.criticalExecute(request).get();
+
+        then(mockAppender).should(never()).doAppend(anyString());
+        assertThat(response.getStatus(), equalTo(200));
     }
 
     @Test
@@ -137,10 +166,6 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
     }
 
 
-    //todo: later
-    //@Test
-    public void getRequestShouldNotBeLogged() {
 
-    }
 
 }
