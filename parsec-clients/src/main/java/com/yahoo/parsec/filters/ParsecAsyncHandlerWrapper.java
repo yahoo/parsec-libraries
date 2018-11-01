@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.function.BiPredicate;
 
 
 /**
@@ -73,12 +74,17 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
      */
     private int lastRespCode;
 
+    private BiPredicate<Request, Response> loggingPredicate;
+
     /**
      * Constructor.
      *
      * @param asyncHandler asyncHandler
+     * @param loggingPredicate
      */
-    public ParsecAsyncHandlerWrapper(final AsyncHandler<T> asyncHandler, final Request ningRequest) {
+    public ParsecAsyncHandlerWrapper(final AsyncHandler<T> asyncHandler, final Request ningRequest,
+                                     BiPredicate<Request, Response> loggingPredicate) {
+
         this.asyncHandler = asyncHandler;
         extensions = (asyncHandler instanceof AsyncHandlerExtensions)
                 ? (AsyncHandlerExtensions) asyncHandler : null;
@@ -87,6 +93,7 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
         this.progress = new ParsecAsyncProgress();
         this.ningRequest = ningRequest;
         this.requestCount = 0;
+        this.loggingPredicate = loggingPredicate;
     }
 
     /**
@@ -277,6 +284,9 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
     private void logError(Request ningRequest, Throwable t, int requestCount, int lastRespCode,
                           ParsecAsyncProgress progress) {
 
+        if (!loggingPredicate.test(ningRequest, null)) {
+            return;
+        }
         //todo: integrate with log formatter later
         final StringBuffer buf = new StringBuffer();
 
@@ -288,6 +298,9 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
     private void logResponse(Request ningRequest, Response ningResponse, int requestCount, int lastRespCode,
                              ParsecAsyncProgress progress) {
 
+        if (!loggingPredicate.test(ningRequest, ningResponse)) {
+            return;
+        }
         //todo: integrate with log formatter later
         final StringBuffer buf = new StringBuffer();
 
