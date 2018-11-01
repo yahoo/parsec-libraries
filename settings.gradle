@@ -7,5 +7,6 @@ include 'parsec-logging'
 include 'parsec-config'
 include 'parsec-clients'
 include 'parsec-validation'
+include 'parsec-web-utils'
 
 rootProject.name = 'parsec-utils'
