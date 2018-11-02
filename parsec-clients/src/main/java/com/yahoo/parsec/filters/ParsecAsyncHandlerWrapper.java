@@ -4,18 +4,22 @@
 package com.yahoo.parsec.filters;
 
 import com.ning.http.client.AsyncHandler;
+import com.ning.http.client.AsyncHandlerExtensions;
+import com.ning.http.client.HttpResponseBodyPart;
+import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
+import com.ning.http.client.ProgressAsyncHandler;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import com.yahoo.parsec.clients.ParsecAsyncProgress;
 import com.yahoo.parsec.clients.ParsecAsyncProgressTimer;
+import com.yahoo.parsec.clients.ParsecClientDefine;
 import org.slf4j.Logger;
-
-import com.ning.http.client.*;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiPredicate;
 
 
@@ -23,7 +27,7 @@ import java.util.function.BiPredicate;
  * {@link AsyncHandler} wrapper that logs connection related information.
  *
  * @param <T> T
- * @author sho
+ * @author sho, baiyi
  */
 class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHandler<T>, AsyncHandlerExtensions {
 
@@ -32,8 +36,6 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(ParsecAsyncHandlerWrapper.class);
 
-    //todo: move to log formatter later
-    private static final Logger TRACE_LOGGER = LoggerFactory.getLogger("parsec.clients.reqresp_log");
 
     /**
      * response builder.
@@ -54,12 +56,11 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
      * extensions.
      */
     private final AsyncHandlerExtensions extensions;
-
+    private final Logger traceLogger;
     /**
      * ning http request.
      */
     private Request ningRequest;
-
     /**
      * parsec async progress do.
      */
@@ -68,13 +69,12 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
      * retry count.
      */
     private int requestCount;
-
     /**
      * last resp code.
      */
     private int lastRespCode;
-
     private BiPredicate<Request, Response> loggingPredicate;
+    private NingRequestResponseFormatter formatter;
 
     /**
      * Constructor.
@@ -83,7 +83,9 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
      * @param loggingPredicate
      */
     public ParsecAsyncHandlerWrapper(final AsyncHandler<T> asyncHandler, final Request ningRequest,
-                                     BiPredicate<Request, Response> loggingPredicate) {
+                                     BiPredicate<Request, Response> loggingPredicate,
+                                     NingRequestResponseFormatter formatter,
+                                     String loggerName) {
 
         this.asyncHandler = asyncHandler;
         extensions = (asyncHandler instanceof AsyncHandlerExtensions)
@@ -94,6 +96,8 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
         this.ningRequest = ningRequest;
         this.requestCount = 0;
         this.loggingPredicate = loggingPredicate;
+        this.formatter = formatter;
+        this.traceLogger = LoggerFactory.getLogger(loggerName);
     }
 
     /**
@@ -281,41 +285,6 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
         return asyncHandler.onCompleted();
     }
 
-    private void logError(Request ningRequest, Throwable t, int requestCount, int lastRespCode,
-                          ParsecAsyncProgress progress) {
-
-        if (!loggingPredicate.test(ningRequest, null)) {
-            return;
-        }
-        //todo: integrate with log formatter later
-        final StringBuffer buf = new StringBuffer();
-
-        buf.append("REQUEST: url:").append(ningRequest.getUrl()).append(ningRequest.getStringData());
-        buf.append(t);
-        TRACE_LOGGER.trace(buf.toString());
-    }
-
-    private void logResponse(Request ningRequest, Response ningResponse, int requestCount, int lastRespCode,
-                             ParsecAsyncProgress progress) {
-
-        if (!loggingPredicate.test(ningRequest, ningResponse)) {
-            return;
-        }
-        //todo: integrate with log formatter later
-        final StringBuffer buf = new StringBuffer();
-
-        buf.append("REQUEST: url:").append(ningRequest.getUrl()).append(ningRequest.getStringData());
-        buf.append("RESPONSE: ");
-        try {
-            buf.append(ningResponse.getResponseBody("UTF-8"));
-        } catch (IOException e) {
-            buf.append("unable to get body ").append(e);
-        }
-
-        TRACE_LOGGER.trace(buf.toString());
-    }
-
-
     /**
      * onSslHandshakeCompleted.
      */
@@ -326,13 +295,54 @@ class ParsecAsyncHandlerWrapper<T> implements AsyncHandler<T>, ProgressAsyncHand
         }
     }
 
-    /**
-     * the progress getter.
-     *
-     * @return progress
-     */
-    public ParsecAsyncProgress getProgress() {
-        return this.progress;
+    private void logError(Request ningRequest, Throwable t, int requestCount, int lastRespCode,
+                          ParsecAsyncProgress progress) {
+
+        if (!loggingPredicate.test(ningRequest, null)) {
+            return;
+        }
+
+        Map<String, Object> additionalArgs = createAdditionalArgs(progress, requestCount, lastRespCode, t);
+        String messageToLog = formatter.format(ningRequest, null, additionalArgs);
+
+        if(traceLogger.isTraceEnabled()) {
+            traceLogger.trace(messageToLog);
+        }
+
     }
+
+    private Map<String,Object> createAdditionalArgs(ParsecAsyncProgress progress,
+                                                    int requestCount,
+                                                    int lastRespCode,
+                                                    Throwable throwable) {
+
+        Map<String, Object> map = new HashMap();
+
+        map.put(ParsecClientDefine.ASYNC_PROGRESS, progress);
+        map.put(ParsecClientDefine.REQUEST_COUNT, requestCount);
+        map.put(ParsecClientDefine.LAST_RESPONSE_CODE, lastRespCode);
+        if (throwable != null) {
+            map.put(ParsecClientDefine.RESPONSE_ERROR, throwable);
+        }
+
+        return map;
+    }
+
+    private void logResponse(Request ningRequest, Response ningResponse, int requestCount, int lastRespCode,
+                             ParsecAsyncProgress progress) {
+
+        if (!loggingPredicate.test(ningRequest, ningResponse)) {
+            return;
+        }
+
+        Map<String, Object> additionalArgs = createAdditionalArgs(progress, requestCount, lastRespCode, null);
+        String messageToLog = formatter.format(ningRequest, ningResponse, additionalArgs);
+        if(traceLogger.isTraceEnabled()) {
+            traceLogger.trace(messageToLog);
+        }
+
+    }
+
+
 }
 
