@@ -4,11 +4,13 @@
 package com.yahoo.parsec.clients;
 
 import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.yahoo.parsec.test.WireMockBaseTest;
+import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
@@ -30,9 +32,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasToString;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
@@ -50,6 +52,11 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
 
     Appender mockAppender = mock(Appender.class);
     Map<String, Collection<String>> headers;
+
+
+    String profileLogTimePattern="time=\\d+.\\d+,";
+    String execInfPattern = "exec_info=\\{\"namelookup_time\":\\d+,\"connect_time\":\\d+," +
+            "\"pretransfer_time\":\\d+,\"starttransfer_time\":\\d+,\"total_time\":\\d+\\}";
 
     @BeforeTest
     public void setupCommonForAllTests() throws JsonProcessingException {
@@ -71,10 +78,14 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
 
         String url = "/get200Profiling";
         WireMock.stubFor(get(urlEqualTo(url))
-                .willReturn(okJson(stubReqBodyJson)));
+                .willReturn(okJson(stubRespBodyJson)
+                        .withHeader(ParsecClientDefine.HEADER_CONTENT_LENGTH, String.valueOf(stubRespBodyJson.length()))
+                ));
 
 
         Map<String, Collection<String>> headers = new HashMap<>();
+        headers.put(ParsecClientDefine.HEADER_HOST, Arrays.asList("nonCriticalGetHost"));
+
 
         String requestMethod = HttpMethod.GET;
 
@@ -90,9 +101,27 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
 
         assertThat(response.getStatus(), equalTo(200));
 
-        //time=1541053143.479, req_url=http://localhost:50338/get200Profiling, req_host_header=null, req_method=GET, exec_info={"namelookup_time":8130,"connect_time":281235,"pretransfer_time":294662,"starttransfer_time":353201,"total_time":3521220}, resp_code=200, src_url=, req_status=single, content_length=null, origin=,
-        then(mockAppender).should().doAppend(argThat(hasToString(containsString(url))));
+
+        //the log would look like below:
+        //time=1541132036.456, req_url=http://localhost:59041/get200Profiling, req_host_header=criticalGetHost, req_method=GET, exec_info={"namelookup_time":8289,"connect_time":79202,"pretransfer_time":97919,"starttransfer_time":155815,"total_time":533641}, resp_code=200, src_url=, req_status=single, content_length=49, origin=,
+
+        String fixedExpection1 = "req_host_header=nonCriticalGetHost, req_method=GET";
+        String fixedEpxection2 = "resp_code=200, src_url=, req_status=single, content_length=49, origin=, ";
+
+        StringBuffer msgPatternBuf = new StringBuffer("^\\[TRACE\\] ");
+        msgPatternBuf.append(profileLogTimePattern)
+                     .append(" req_url=").append(request.getUrl()).append(", ")
+                     .append(fixedExpection1).append(", ")
+                     .append(execInfPattern).append(", ")
+                     .append(fixedEpxection2)
+                     .append("$");
+
+        then(mockAppender).should().doAppend(argThat(hasToString(matchesPattern(msgPatternBuf.toString()))));
+
+
+
     }
+
 
     @Test
     public void criticalPostRequestShouldBeLogged() throws URISyntaxException, ExecutionException, InterruptedException {
@@ -101,11 +130,14 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
 
         WireMock.stubFor(post(urlEqualTo(url))
                 .withRequestBody(equalToJson(stubReqBodyJson))
-                .willReturn(okJson(stubRespBodyJson)));
+                .willReturn(okJson(stubRespBodyJson)
+                        .withHeader(ParsecClientDefine.HEADER_CONTENT_LENGTH, String.valueOf(stubRespBodyJson.length()))
+                ));
 
         String requestMethod = HttpMethod.POST;
         Map<String, Collection<String>> headers = new HashMap<>();
-        headers.put("key1", Arrays.asList("headerValue"));
+        headers.put(ParsecClientDefine.HEADER_HOST, Arrays.asList("criticalPostHost"));
+
 
 
         ParsecAsyncHttpRequest request =
@@ -119,7 +151,19 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
 
         parsecHttpClient.criticalExecute(request).get();
 
-        then(mockAppender).should().doAppend(argThat(hasToString(containsString(url))));
+
+        String fixedExpection1 = "req_host_header=criticalPostHost, req_method=POST";
+        String fixedEpxection2 = "resp_code=200, src_url=, req_status=single, content_length=49, origin=, ";
+
+        StringBuffer msgPatternBuf = new StringBuffer("^\\[TRACE\\] ");
+        msgPatternBuf.append(profileLogTimePattern)
+                .append(" req_url=").append(request.getUrl()).append(", ")
+                .append(fixedExpection1).append(", ")
+                .append(execInfPattern).append(", ")
+                .append(fixedEpxection2)
+                .append("$");
+
+        then(mockAppender).should().doAppend(argThat(hasToString(matchesPattern(msgPatternBuf.toString()))));
 
     }
 
@@ -140,12 +184,13 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
         WireMock.stubFor(post(urlEqualTo(url)).inScenario(scenarioName)
                 .whenScenarioStateIs("requested count 1")
                 .withRequestBody(equalToJson(stubReqBodyJson))
-                .willReturn(okJson(stubRespBodyJson)));
+                .willReturn(okJson(stubRespBodyJson)
+                        .withHeader(ParsecClientDefine.HEADER_CONTENT_LENGTH, String.valueOf(stubRespBodyJson.length()))
+                ));
 
         String requestMethod = HttpMethod.POST;
         Map<String, Collection<String>> headers = new HashMap<>();
-        headers.put("key1", Arrays.asList("headerValue"));
-
+        headers.put(ParsecClientDefine.HEADER_HOST, Arrays.asList("postRetriesHost"));
 
         ParsecAsyncHttpRequest request =
                 new ParsecAsyncHttpRequest.Builder()
@@ -162,6 +207,37 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
 
 
         assertThat(response.getStatus(), equalTo(200));
-        then(mockAppender).should(times(2)).doAppend(argThat(hasToString(containsString(url))));
+
+
+        ArgumentCaptor<ILoggingEvent> loggingEventArgumentCaptor =  ArgumentCaptor.forClass(ILoggingEvent.class);
+        then(mockAppender).should(times(2)).doAppend(loggingEventArgumentCaptor.capture());
+
+        String loggedFailureMsg = loggingEventArgumentCaptor.getAllValues().get(0).toString();
+
+        String fixedExpection1 = "req_host_header=postRetriesHost, req_method=POST";
+        String fiexdExpectionForFaiulre = "resp_code=500, src_url=, req_status=single, content_length=null, origin=, ";
+
+        StringBuffer msgPatternBuf = new StringBuffer("^\\[TRACE\\] ");
+        msgPatternBuf.append(profileLogTimePattern)
+                .append(" req_url=").append(request.getUrl()).append(", ")
+                .append(fixedExpection1).append(", ")
+                .append(execInfPattern).append(", ")
+                .append(fiexdExpectionForFaiulre)
+                .append("$");
+
+        assertThat(loggedFailureMsg, matchesPattern(msgPatternBuf.toString()));
+
+        String fiexdExpectionForSuccess = "resp_code=200, src_url=, req_status=single\\|retry:500, content_length=49, origin=, ";
+
+        msgPatternBuf = new StringBuffer("^\\[TRACE\\] ");
+        msgPatternBuf.append(profileLogTimePattern)
+                .append(" req_url=").append(request.getUrl()).append(", ")
+                .append(fixedExpection1).append(", ")
+                .append(execInfPattern).append(", ")
+                .append(fiexdExpectionForSuccess)
+                .append("$");
+
+        String loggedSuccessMsg = loggingEventArgumentCaptor.getAllValues().get(1).toString();
+        assertThat(loggedSuccessMsg, matchesPattern(msgPatternBuf.toString()));
     }
 }
