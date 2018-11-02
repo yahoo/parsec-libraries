@@ -20,24 +20,35 @@ import java.util.function.BiPredicate;
  */
 public class RequestResponeLoggingFilter implements RequestFilter {
 
-    private static BiPredicate<Request, Response> DEFAULT_LOGPREDICATE = new PostPutDeleteLoggingPredicate();
+    private static final String DEFAULT_TRACE_LOGGER_NAME = "parsec.clients.reqresp_log";
 
-    private BiPredicate<Request, Response> predicate;
+    private static BiPredicate<Request, Response> DEFAULT_LOG_PREDICATE = new PostPutDeleteLoggingPredicate();
 
-    public RequestResponeLoggingFilter(BiPredicate<Request, Response> logPredicate) {
+    private final BiPredicate<Request, Response> predicate;
+    private final NingRequestResponseFormatter formatter;
+    private final String traceLoggerName;
+
+    public RequestResponeLoggingFilter(BiPredicate<Request, Response> logPredicate,
+                                       NingRequestResponseFormatter formatter,
+                                       String loggerName) {
         this.predicate = logPredicate;
+        this.formatter = formatter;
+        this.traceLoggerName = loggerName;
     }
 
-    public RequestResponeLoggingFilter() {
-        this(DEFAULT_LOGPREDICATE);
-
+    public RequestResponeLoggingFilter(NingRequestResponseFormatter formatter) {
+        this(DEFAULT_LOG_PREDICATE, formatter, DEFAULT_TRACE_LOGGER_NAME);
     }
 
     @Override
     public <T> FilterContext<T> filter(FilterContext<T> ctx) throws FilterException {
         return new FilterContext.FilterContextBuilder<>(ctx)
                 .asyncHandler(
-                        new ParsecAsyncHandlerWrapper(ctx.getAsyncHandler(), ctx.getRequest(), predicate)
+                        new ParsecAsyncHandlerWrapper(ctx.getAsyncHandler(),
+                                ctx.getRequest(),
+                                predicate,
+                                formatter,
+                                traceLoggerName)
                 )
                 .build();
     }

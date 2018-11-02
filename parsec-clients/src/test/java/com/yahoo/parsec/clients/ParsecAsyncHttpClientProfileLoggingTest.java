@@ -6,7 +6,6 @@ package com.yahoo.parsec.clients;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.core.Appender;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.yahoo.parsec.test.WireMockBaseTest;
@@ -34,7 +33,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasToString;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
@@ -92,6 +90,7 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
 
         assertThat(response.getStatus(), equalTo(200));
 
+        //time=1541053143.479, req_url=http://localhost:50338/get200Profiling, req_host_header=null, req_method=GET, exec_info={"namelookup_time":8130,"connect_time":281235,"pretransfer_time":294662,"starttransfer_time":353201,"total_time":3521220}, resp_code=200, src_url=, req_status=single, content_length=null, origin=,
         then(mockAppender).should().doAppend(argThat(hasToString(containsString(url))));
     }
 

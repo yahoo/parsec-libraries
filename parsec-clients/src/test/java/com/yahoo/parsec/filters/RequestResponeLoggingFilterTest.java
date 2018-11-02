@@ -3,23 +3,21 @@
 
 package com.yahoo.parsec.filters;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.core.Appender;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.yahoo.parsec.clients.ParsecAsyncHttpClient;
 import com.yahoo.parsec.clients.ParsecAsyncHttpRequest;
+import com.yahoo.parsec.clients.ParsecClientDefine;
 import com.yahoo.parsec.test.WireMockBaseTest;
-import org.slf4j.LoggerFactory;
+import org.mockito.ArgumentCaptor;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.Response;
-import java.net.URI;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,51 +32,47 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasToString;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 
 /**
  * Created by baiyi on 10/30/2018.
  */
 public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
 
-    private static ParsecAsyncHttpClient parsecHttpClient =
-            new ParsecAsyncHttpClient.Builder()
-                    .setAcceptAnyCertificate(true)
-                    .addRequestFilter(new RequestResponeLoggingFilter())
-                    .build();
 
+    private ParsecAsyncHttpClient parsecHttpClient;
+    NingRequestResponseFormatter mockFormatter;
 
-
-    Appender mockAppender = mock(Appender.class);
-    Map<String, Collection<String>> headers;
+    Map<String, Collection<String>> stubHeaders;
 
     @BeforeTest
     public void setupCommon() throws JsonProcessingException {
+        stubHeaders = new HashMap<>();
+        stubHeaders.put("header1", Arrays.asList("value1"));
+        stubHeaders.put("header2", Arrays.asList("value2"));
 
-        headers = new HashMap<>();
-        headers.put("header1", Arrays.asList("value1"));
-        headers.put("header2", Arrays.asList("value2"));
     }
 
 
     @BeforeMethod
     public void setup() {
-        //todo: modify the logger name later.
-        Logger logger = (Logger) LoggerFactory.getLogger("parsec.clients.reqresp_log");
-
-        mockAppender = mock(Appender.class);
-        logger.addAppender(mockAppender);
+        mockFormatter = mock(NingRequestResponseFormatter.class);
+        parsecHttpClient = new ParsecAsyncHttpClient.Builder()
+                .setAcceptAnyCertificate(true)
+                .addRequestFilter(new RequestResponeLoggingFilter(mockFormatter))
+                .build();
     }
 
     @Test
@@ -90,7 +84,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
 
         String requestMethod = HttpMethod.GET;
 
-        Map<String, Collection<String>> headers = new HashMap<>();
+        Map<String, Collection<String>> headers = stubHeaders;
 
         ParsecAsyncHttpRequest request =
                 new ParsecAsyncHttpRequest.Builder()
@@ -102,21 +96,21 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
 
         Response response = parsecHttpClient.criticalExecute(request).get();
 
-        then(mockAppender).should(never()).doAppend(anyString());
+        then(mockFormatter).should(never()).format(any(), any(), any());
         assertThat(response.getStatus(), equalTo(200));
     }
 
     @Test
-    public void successPostRequestsShouldBeLogged() throws URISyntaxException, ExecutionException, InterruptedException {
+    public void successPostRequestsShouldBeLogged() throws URISyntaxException, ExecutionException, InterruptedException, IOException {
 
-        String url = "/postWithFilter200";
+        String url = "/postWithFilter200?param1=value1";
         WireMock.stubFor(post(urlEqualTo(url))
                 .withRequestBody(equalToJson(stubReqBodyJson))
                 .willReturn(okJson(stubRespBodyJson)));
 
         String requestMethod = HttpMethod.POST;
 
-        Map<String, Collection<String>> headers = new HashMap<>();
+        Map<String, Collection<String>> headers = stubHeaders;
 
         ParsecAsyncHttpRequest request =
                 new ParsecAsyncHttpRequest.Builder()
@@ -128,7 +122,26 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
 
         Response response = parsecHttpClient.criticalExecute(request).get();
 
-        then(mockAppender).should().doAppend(argThat(hasToString(containsString(url))));
+
+        ArgumentCaptor<Map> mapArgumentCaptor = ArgumentCaptor.forClass(Map.class);
+
+        then(mockFormatter).should()
+                .format(argThat(allOf(hasProperty("stringData", equalTo(stubReqBodyJson)),
+                                      hasProperty("url", equalTo(request.getUrl())),
+                                      hasProperty("headers", hasKey("header1"))
+                                      )
+                                ), // request
+                        argThat(allOf(hasProperty("responseBody", equalTo(stubRespBodyJson)),
+                                      hasProperty("statusCode", equalTo(200))
+                                     )
+                                ), //response
+                        mapArgumentCaptor.capture());
+
+
+        Map additionalArgs = mapArgumentCaptor.getValue();
+        assertThat(additionalArgs.get(ParsecClientDefine.REQUEST_COUNT), equalTo(1));
+        assertThat(additionalArgs.get(ParsecClientDefine.LAST_RESPONSE_CODE), equalTo(0));
+        assertThat(additionalArgs.get(ParsecClientDefine.ASYNC_PROGRESS), is(notNullValue()));
 
         assertThat(response.getStatus(), equalTo(200));
         assertThat(response.getEntity(), is(notNullValue()));
@@ -149,7 +162,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
         ParsecAsyncHttpRequest request =
                 new ParsecAsyncHttpRequest.Builder()
                         .setUrl(wireMockBaseUrl+url)
-                        .setHeaders(headers)
+                        .setHeaders(stubHeaders)
                         .setRequestTimeout(300)
                         .setMethod(requestMethod)
                         .setBody(stubReqBodyJson).setBodyEncoding("UTF-8").build();
@@ -162,7 +175,26 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
         }
 
         assertThat(exception, is(notNullValue()));
-        then(mockAppender).should().doAppend(argThat(hasToString(containsString(url))));
+
+        ArgumentCaptor<Map> mapArgumentCaptor = ArgumentCaptor.forClass(Map.class);
+
+
+        then(mockFormatter).should()
+                .format(argThat(allOf(hasProperty("stringData", equalTo(stubReqBodyJson)),
+                                      hasProperty("url", equalTo(request.getUrl())),
+                                      hasProperty("headers", hasKey("header1"))
+                                     )
+                                ), // request
+                        argThat(nullValue(com.ning.http.client.Response.class)),  //response
+                        mapArgumentCaptor.capture());
+
+
+        Map additionalArgs = mapArgumentCaptor.getValue();
+        assertThat((int)additionalArgs.get(ParsecClientDefine.REQUEST_COUNT), greaterThan(1));
+        assertThat(additionalArgs.get(ParsecClientDefine.LAST_RESPONSE_CODE), equalTo(0));
+        assertThat(additionalArgs.get(ParsecClientDefine.ASYNC_PROGRESS), is(notNullValue()));
+        assertThat(additionalArgs.get(ParsecClientDefine.RESPONSE_ERROR), is(notNullValue()));
+
     }
 
 
