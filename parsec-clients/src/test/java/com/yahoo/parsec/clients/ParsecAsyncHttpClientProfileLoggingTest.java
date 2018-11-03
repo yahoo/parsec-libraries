@@ -8,6 +8,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.yahoo.parsec.test.WireMockBaseTest;
 import org.mockito.ArgumentCaptor;
@@ -35,6 +36,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasToString;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.core.Is.is;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
@@ -196,7 +199,7 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
                 new ParsecAsyncHttpRequest.Builder()
                         .setUrl(wireMockBaseUrl+url)
                         .setHeaders(headers)
-                        .setRequestTimeout(300)
+                        .setRequestTimeout(30000)
                         .setMethod(requestMethod)
                         .setMaxRetries(2)
                         .addRetryStatusCode(500)
@@ -239,5 +242,53 @@ public class ParsecAsyncHttpClientProfileLoggingTest extends WireMockBaseTest {
 
         String loggedSuccessMsg = loggingEventArgumentCaptor.getAllValues().get(1).toString();
         assertThat(loggedSuccessMsg, matchesPattern(msgPatternBuf.toString()));
+    }
+
+
+    @Test
+    public void faultyPostRequestShouldBeLogged() throws URISyntaxException {
+
+        String url = "/postAtFault";
+        WireMock.stubFor(post(urlEqualTo(url))
+                .withRequestBody(equalToJson(stubReqBodyJson))
+                .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
+
+        String requestMethod = HttpMethod.POST;
+
+
+        Map<String, Collection<String>> headers = new HashMap<>();
+        headers.put(ParsecClientDefine.HEADER_HOST, Arrays.asList("postAtFaultHost"));
+
+        ParsecAsyncHttpRequest request =
+                new ParsecAsyncHttpRequest.Builder()
+                        .setUrl(wireMockBaseUrl+url)
+                        .setHeaders(headers)
+                        .setRequestTimeout(300)
+                        .setMethod(requestMethod)
+                        .setBody(stubReqBodyJson).setBodyEncoding("UTF-8").build();
+
+        Throwable exception = null;
+        try {
+            parsecHttpClient.criticalExecute(request).get();
+        } catch (Exception e) {
+            exception = e;
+        }
+
+        assertThat(exception, is(notNullValue()));
+
+        String fixedExpection1 = "req_host_header=postAtFaultHost, req_method=POST";
+        String fixedEpxection2 = "resp_code=-1, src_url=, req_status=single\\|retry:0, content_length=, origin=, ";
+
+        StringBuffer msgPatternBuf = new StringBuffer("^\\[TRACE\\] ");
+        msgPatternBuf.append(profileLogTimePattern)
+                .append(" req_url=").append(request.getUrl()).append(", ")
+                .append(fixedExpection1).append(", ")
+                .append(execInfPattern).append(", ")
+                .append(fixedEpxection2)
+                .append("$");
+
+        then(mockAppender).should().doAppend(argThat(hasToString(matchesPattern(msgPatternBuf.toString()))));
+
+
     }
 }
