@@ -8,6 +8,9 @@ import com.ning.http.client.multipart.ByteArrayPart;
 import com.ning.http.client.multipart.FilePart;
 import com.ning.http.client.multipart.Part;
 import com.ning.http.client.multipart.StringPart;
+
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -508,4 +511,16 @@ public class ParsecAsyncHttpRequestTest {
         assertEquals("[%2Bparam]", queryParams.get("encodeParam").toString());
         assertEquals("[param]", queryParams.get("normalParam").toString());
     }
+
+    @Test
+    public void testSetAndGetNameResolver() throws Exception {
+        // Test default value
+        assertSame(builder.build().getNameResolver(), StandardNameResolver.getInstance());
+
+        // Test set and get
+        ParsecNameResolver nameResolver = Mockito.mock(ParsecNameResolver.class);
+        assertSame(builder.setNameResolver(nameResolver), builder);
+        assertSame(builder.build().getNameResolver(), nameResolver);
+    }
+
 }

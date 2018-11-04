@@ -3,6 +3,7 @@
 
 package com.yahoo.parsec.clients;
 
+import com.google.common.base.Preconditions;
 import com.ning.http.client.*;
 import com.ning.http.client.cookie.Cookie;
 import com.ning.http.client.multipart.ByteArrayPart;
@@ -360,6 +361,15 @@ public class ParsecAsyncHttpRequest {
     }
 
     /**
+     * Gets the name resolver.
+     *
+     * @return Name resolver.
+     */
+    public ParsecNameResolver getNameResolver() {
+        return ((DelegateNameResolver) ningRequest.getNameResolver()).getDelegate();
+    }
+
+    /**
      * Static Builder class for {@link ParsecAsyncHttpRequest}.
      *
      * @author sho
@@ -491,6 +501,11 @@ public class ParsecAsyncHttpRequest {
         private List<Part> bodyParts;
 
         /**
+         * DNS name resolver.
+         */
+        private ParsecNameResolver nameResolver;
+
+        /**
          * Constructor.
          */
         public Builder() {
@@ -503,6 +518,7 @@ public class ParsecAsyncHttpRequest {
             uri = URI.create("http://localhost");
             acceptCompression = true;
             bodyParts = new ArrayList<>();
+            nameResolver = StandardNameResolver.getInstance();
         }
 
         /**
@@ -705,6 +721,8 @@ public class ParsecAsyncHttpRequest {
             for (Part part: bodyParts) {
                 ningRequestBuilder.addBodyPart(part);
             }
+
+            ningRequestBuilder.setNameResolver(new DelegateNameResolver(nameResolver));
 
             return new ParsecAsyncHttpRequest(this);
         }
@@ -981,6 +999,12 @@ public class ParsecAsyncHttpRequest {
          */
         public Builder setAcceptCompression(boolean acceptCompression) {
             this.acceptCompression = acceptCompression;
+            return this;
+        }
+
+        public Builder setNameResolver(ParsecNameResolver nameResolver) {
+            Preconditions.checkNotNull(nameResolver, "Name resolver cannot be null");
+            this.nameResolver = nameResolver;
             return this;
         }
     }
