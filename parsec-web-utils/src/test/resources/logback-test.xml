@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- For assistance related to logback-translator or configuration  -->
+<!-- files in general, please contact the logback user mailing list -->
+<!-- at http://www.qos.ch/mailman/listinfo/logback-user             -->
+<!--                                                                -->
+<!-- For professional support please see                            -->
+<!--    http://www.qos.ch/shop/products/professionalSupport         -->
+<!--                                                                -->
+<configuration scan="false">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <Target>System.out</Target>
+        <encoder>
+            <pattern>[%d{"EEE dd MMM yyyy HH:mm:ss,SSS Z"}] %-5p [%c] %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="AUDITOUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>build/audit_test.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>build/audit_test.%d{yyyyMMdd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%d{"EEE dd MMM yyyy HH:mm:ss,SSS Z"}] %-5p [%c] %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.yahoo.parsec.web.RequestResponseLoggingFilter" level="debug">
+        <appender-ref ref="AUDITOUT"/>
+    </logger>
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

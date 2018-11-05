@@ -11,6 +11,7 @@ import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -35,7 +36,7 @@ public class ParsecServletResponseWrapper extends HttpServletResponseWrapper {
 
     @Override
     public PrintWriter getWriter() throws IOException {
-        return new PrintWriter(new OutputStreamWriter(getOutputStream()));
+        return new DelegatedPrintWriter(getOutputStream());
     }
 
     public byte[] getContentAsByteArray() {
@@ -79,6 +80,41 @@ public class ParsecServletResponseWrapper extends HttpServletResponseWrapper {
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
             teeStream.write(b, off, len);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            teeStream.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            teeStream.close();
+        }
+    }
+
+    private class DelegatedPrintWriter extends PrintWriter {
+
+        DelegatedPrintWriter(ServletOutputStream sourceStream) {
+            super(new OutputStreamWriter(sourceStream));
+        }
+
+        @Override
+        public void write(int c) {
+            super.write(c);
+            super.flush();
+        }
+
+        @Override
+        public void write(String s, int off, int len) {
+            super.write(s, off, len);
+            super.flush();
+        }
+
+        @Override
+        public void write(char[] buf, int off, int len) {
+            super.write(buf, off, len);
+            super.flush();
         }
     }
 }
