@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.Optional;
 
 public class ParsecServletRequestWrapper extends HttpServletRequestWrapper {
 
@@ -47,7 +48,8 @@ public class ParsecServletRequestWrapper extends HttpServletRequestWrapper {
     }
 
     public String getContent() throws UnsupportedEncodingException {
-        return contentStream.toString(getCharacterEncoding());
+        String charset = Optional.ofNullable(getCharacterEncoding()).orElse("UTF-8");
+        return contentStream.toString(charset);
     }
 
     private class DelegatedInputStream extends ServletInputStream {
