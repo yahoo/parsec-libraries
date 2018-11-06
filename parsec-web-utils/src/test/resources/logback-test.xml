@@ -27,7 +27,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.yahoo.parsec.web.RequestResponseLoggingFilter" level="debug">
+    <logger name="com.yahoo.parsec.web.RequestResponseLoggingFilter" level="debug" additivity="false">
         <appender-ref ref="AUDITOUT"/>
     </logger>
     <root level="INFO">

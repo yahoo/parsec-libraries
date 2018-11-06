@@ -120,7 +120,6 @@ class RequestResponseLoggingTest extends Specification {
 
         then:
         replyContent == expectedReplyContent
-        println "audit log: " + mockAppender.getCachedMsg()
         def auditLog = new JsonSlurper().parseText(mockAppender.getCachedMsg())
         auditLog.request.payload == expectedReplyContent
         auditLog.response.payload == expectedReplyContent
