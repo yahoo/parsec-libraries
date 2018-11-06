@@ -51,11 +51,11 @@ public class ParsecAsyncHttpClientProfilingTest extends WireMockBaseTest {
 
     private static ParsecAsyncHttpClient parsecHttpClient =
             new ParsecAsyncHttpClient.Builder()
-                    .enableProfilingFilter(true)
+                    .enableProfilingFilter(true) //toggle this to set to use the old/new way
                     .setAcceptAnyCertificate(true).build();
 
 
-    private static int COMMON_REQUEST_TIME_OUT = 30;
+    private static int COMMON_REQUEST_TIME_OUT = 100;
 
     Appender mockAppender = mock(Appender.class);
     Map<String, Collection<String>> headers;

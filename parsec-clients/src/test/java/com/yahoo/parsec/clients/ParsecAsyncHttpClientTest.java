@@ -74,28 +74,30 @@ public class ParsecAsyncHttpClientTest {
 
     @Test
     public void testAddGetAndRemoveNingRequestFilter() throws Exception {
+        client = new ParsecAsyncHttpClient.Builder().build();
         // Test default value
         List<RequestFilter> requestFilters = client.getRequestFilters();
         assertEquals(requestFilters.size(), 0);
 
         //Test add
         RequestFilter mockRequestFilter = mock(DummyRequestFilter.class);
-        client = new ParsecAsyncHttpClient.Builder().addRequestFilter(mockRequestFilter).build();
+        client = new ParsecAsyncHttpClient.Builder().enableProfilingFilter(true).addRequestFilter(mockRequestFilter).build();
 
+        int defaultFilterSize = 1;
         requestFilters = client.getRequestFilters();
-        assertEquals(requestFilters.size(), 1);
+        assertEquals(requestFilters.size(), defaultFilterSize+1);
         assertTrue(requestFilters.get(0) instanceof DummyRequestFilter);
 
         //Test remove
-        ParsecAsyncHttpClient.Builder builder = new ParsecAsyncHttpClient.Builder()
+        ParsecAsyncHttpClient.Builder builder = new ParsecAsyncHttpClient.Builder().enableProfilingFilter(true)
                 .addRequestFilter(mock(RequestFilter.class))
                 .addRequestFilter(mockRequestFilter);
 
         requestFilters = builder.build().getRequestFilters();
-        assertEquals(requestFilters.size(), 2);
+        assertEquals(requestFilters.size(), defaultFilterSize+2);
         requestFilters = builder
             .removeRequestFilter(requestFilters.get(0)).build().getRequestFilters();
-        assertEquals(requestFilters.size(), 1);
+        assertEquals(requestFilters.size(), defaultFilterSize+1);
         assertTrue(requestFilters.get(0) instanceof DummyRequestFilter);
     }
 
