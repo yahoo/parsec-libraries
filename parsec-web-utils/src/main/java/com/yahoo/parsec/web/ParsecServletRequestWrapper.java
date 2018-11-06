@@ -25,9 +25,8 @@ public class ParsecServletRequestWrapper extends HttpServletRequestWrapper {
      * Constructs a request object wrapping the given request.
      *
      * @param request servlet request
-     * @throws IllegalArgumentException if the request servletStream null
      */
-    public ParsecServletRequestWrapper(HttpServletRequest request) throws IOException {
+    public ParsecServletRequestWrapper(HttpServletRequest request) {
         super(request);
         int contentLength = request.getContentLength();
         contentStream = new ByteArrayOutputStream(contentLength >= 0 ? contentLength : 1024);
