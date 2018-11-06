@@ -4,7 +4,7 @@
 package com.yahoo.parsec.clients;
 
 /**
- * CreatedD by hankting on 9/14/15.
+ * Created by hankting on 9/14/15.
  */
 public final class ParsecClientDefine {
 
