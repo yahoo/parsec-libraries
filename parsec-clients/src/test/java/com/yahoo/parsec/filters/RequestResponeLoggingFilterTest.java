@@ -89,7 +89,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
                 new ParsecAsyncHttpRequest.Builder()
                         .setUrl(wireMockBaseUrl+url)
                         .setHeaders(headers)
-                        .setRequestTimeout(300)
+                        .setRequestTimeout(30)
                         .setMethod(requestMethod)
                         .setBody("").setBodyEncoding("UTF-8").build();
 
@@ -115,7 +115,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
                 new ParsecAsyncHttpRequest.Builder()
                         .setUrl(wireMockBaseUrl+url)
                         .setHeaders(headers)
-                        .setRequestTimeout(300)
+                        .setRequestTimeout(30)
                         .setMethod(requestMethod)
                         .setBody(stubReqBodyJson).setBodyEncoding("UTF-8").build();
 
@@ -160,7 +160,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
                 new ParsecAsyncHttpRequest.Builder()
                         .setUrl(wireMockBaseUrl+url)
                         .setHeaders(stubHeaders)
-                        .setRequestTimeout(300)
+                        .setRequestTimeout(30)
                         .setMethod(requestMethod)
                         .setBody(stubReqBodyJson).setBodyEncoding("UTF-8").build();
 
