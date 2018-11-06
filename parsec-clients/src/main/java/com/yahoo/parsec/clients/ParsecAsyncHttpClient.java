@@ -70,6 +70,10 @@ public class ParsecAsyncHttpClient {
     private static final NingRequestResponseFormatter PROFILE_LOGGING_FORMATTER = new ProfilingFormatter();
     private static final String PROFILE_LOGGING_LOG_NAME = "parsec.clients.profiling_log";
 
+    private static final RequestFilter PROFILING_FILTER = new ProfilingFilter(PROFILE_LOGGING_PREDICATE,
+                                                                      PROFILE_LOGGING_FORMATTER,
+                                                                      PROFILE_LOGGING_LOG_NAME);
+
 
     //for internal use only for now so it's easier to switch back-and-forth for debugging , use the wrapper for profiling
     private boolean oldFashionProfiling = true;
@@ -87,9 +91,9 @@ public class ParsecAsyncHttpClient {
      */
     private ParsecAsyncHttpClient(final Builder builder) {
         this(builder.configBuilder,
-                builder.cacheExpireAfterWrite,
-                builder.cacheMaximumSize,
-                builder.enableProfilingFilter);
+             builder.cacheExpireAfterWrite,
+             builder.cacheMaximumSize,
+             builder.enableProfilingFilter);
     }
 
     /**
@@ -110,11 +114,10 @@ public class ParsecAsyncHttpClient {
 
 
         if (enableProfilingFilter) {
+            //so that there's only one filter.
+            ningClientConfigBuilder.removeRequestFilter(PROFILING_FILTER);
+            ningClientConfigBuilder.addRequestFilter(PROFILING_FILTER);
             oldFashionProfiling = false;
-            ningClientConfigBuilder.addRequestFilter(
-                    new ProfilingFilter(PROFILE_LOGGING_PREDICATE,
-                            PROFILE_LOGGING_FORMATTER,
-                            PROFILE_LOGGING_LOG_NAME));
         }
 
         this.ningClientConfig = ningClientConfigBuilder.build();
