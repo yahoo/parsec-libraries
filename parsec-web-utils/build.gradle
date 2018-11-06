@@ -13,4 +13,3 @@ dependencies{
     testCompile group: 'org.hamcrest'       , name: 'java-hamcrest'  , version: '2.0.0.0'
 }
 
-bintray.pkg.version.mavenCentralSync.sync = false
