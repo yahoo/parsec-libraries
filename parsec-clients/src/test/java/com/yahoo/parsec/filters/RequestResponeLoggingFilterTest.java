@@ -34,7 +34,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.notNullValue;
@@ -90,7 +89,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
                 new ParsecAsyncHttpRequest.Builder()
                         .setUrl(wireMockBaseUrl+url)
                         .setHeaders(headers)
-                        .setRequestTimeout(300)
+                        .setRequestTimeout(30)
                         .setMethod(requestMethod)
                         .setBody("").setBodyEncoding("UTF-8").build();
 
@@ -116,7 +115,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
                 new ParsecAsyncHttpRequest.Builder()
                         .setUrl(wireMockBaseUrl+url)
                         .setHeaders(headers)
-                        .setRequestTimeout(300)
+                        .setRequestTimeout(30)
                         .setMethod(requestMethod)
                         .setBody(stubReqBodyJson).setBodyEncoding("UTF-8").build();
 
@@ -139,9 +138,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
 
 
         Map additionalArgs = mapArgumentCaptor.getValue();
-        assertThat(additionalArgs.get(ParsecClientDefine.REQUEST_COUNT), equalTo(1));
-        assertThat(additionalArgs.get(ParsecClientDefine.LAST_RESPONSE_CODE), equalTo(0));
-        assertThat(additionalArgs.get(ParsecClientDefine.ASYNC_PROGRESS), is(notNullValue()));
+        assertThat(additionalArgs.get(ParsecClientDefine.PROFILING_ASYNC_PROGRESS), is(notNullValue()));
 
         assertThat(response.getStatus(), equalTo(200));
         assertThat(response.getEntity(), is(notNullValue()));
@@ -163,7 +160,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
                 new ParsecAsyncHttpRequest.Builder()
                         .setUrl(wireMockBaseUrl+url)
                         .setHeaders(stubHeaders)
-                        .setRequestTimeout(300)
+                        .setRequestTimeout(30)
                         .setMethod(requestMethod)
                         .setBody(stubReqBodyJson).setBodyEncoding("UTF-8").build();
 
@@ -190,9 +187,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
 
 
         Map additionalArgs = mapArgumentCaptor.getValue();
-        assertThat((int)additionalArgs.get(ParsecClientDefine.REQUEST_COUNT), greaterThan(1));
-        assertThat(additionalArgs.get(ParsecClientDefine.LAST_RESPONSE_CODE), equalTo(0));
-        assertThat(additionalArgs.get(ParsecClientDefine.ASYNC_PROGRESS), is(notNullValue()));
+        assertThat(additionalArgs.get(ParsecClientDefine.PROFILING_ASYNC_PROGRESS), is(notNullValue()));
         assertThat(additionalArgs.get(ParsecClientDefine.RESPONSE_ERROR), is(notNullValue()));
 
     }

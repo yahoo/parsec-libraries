@@ -18,10 +18,9 @@ public final class ParsecClientDefine {
      */
     public static final String REQUEST_SINGLE_RETRY = "single|retry";
 
-    public static final String REQUEST_COUNT = "request-count";
-
-    public static final String ASYNC_PROGRESS = "progress";
-
+    public static final String HEADER_PROFILING_REQUEST_COUNT = "req-count";
+    public static final String HEADER_PROFILING_LAST_RESPONSE_CODE = "last-resp-code";
+    public static final String PROFILING_ASYNC_PROGRESS = "progress";
     /**
      * host header key.
      */
@@ -32,7 +31,6 @@ public final class ParsecClientDefine {
      */
     public static final String HEADER_CONTENT_LENGTH = "content-length";
 
-    public static final String LAST_RESPONSE_CODE = "last-response-code";
 
     public static final String RESPONSE_ERROR = "response-error";
 

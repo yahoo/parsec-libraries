@@ -57,9 +57,21 @@ public final class ParsecClientProfilingLogUtil {
             final ParsecAsyncProgress progress,
             final Map<String, String> msgMap
             ) {
+
         if (!PROF_LOGGER.isTraceEnabled()) {
             return;
         }
+
+        String logMsg = formatMessage(request, response, requestStatus, progress, msgMap);
+        PROF_LOGGER.trace(logMsg);
+    }
+
+
+    public static String formatMessage(final Request request,
+                                       final Response response,
+                                       final String requestStatus,
+                                       final ParsecAsyncProgress progress,
+                                       final Map<String, String> msgMap) {
 
         //
         // prepare log data
@@ -79,15 +91,19 @@ public final class ParsecClientProfilingLogUtil {
             respCode = response.getStatusCode();
         }
 
+        String executeInfo;
         try {
-            String executeInfo = OBJECT_MAPPER.writeValueAsString(progress);
+            executeInfo = OBJECT_MAPPER.writeValueAsString(progress);
+        } catch (JsonProcessingException e) {
+            executeInfo = "unable to parse executeInfo. " + e.getMessage();
+        }
 
-            //
-            // FIXME: should implement a servlet filter to set $_SERVER['REQUEST_URI']
-            //
-            String srcUrl = "";
+        //
+        // FIXME: should implement a servlet filter to set $_SERVER['REQUEST_URI']
+        //
+        String srcUrl = "";
 
-            StringBuilder stringBuilder = new StringBuilder()
+        StringBuilder stringBuilder = new StringBuilder()
                 .append("time=").append(timeInSecond).append(", ")
                 .append("req_url=").append(reqUrl).append(", ")
                 .append("req_host_header=").append(reqHostHeader).append(", ")
@@ -99,19 +115,15 @@ public final class ParsecClientProfilingLogUtil {
                 .append("content_length=").append(contentLength).append(", ")
                 .append("origin=").append(origin).append(", ");
 
-            if(msgMap != null){
-                for (Map.Entry<String, String> entry : msgMap.entrySet()){
-                    stringBuilder.append(entry.getKey()).append("=").append(entry.getValue()).append(", ");
-                }
+        if(msgMap != null){
+            for (Map.Entry<String, String> entry : msgMap.entrySet()){
+                stringBuilder.append(entry.getKey()).append("=").append(entry.getValue()).append(", ");
             }
-
-            String logMsg = stringBuilder.toString();
-
-            //logging
-            PROF_LOGGER.trace(logMsg);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
         }
+
+        return stringBuilder.toString();
+
+
     }
 
     /**
