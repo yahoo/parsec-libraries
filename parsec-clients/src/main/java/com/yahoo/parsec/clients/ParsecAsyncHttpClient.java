@@ -6,9 +6,15 @@ package com.yahoo.parsec.clients;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import com.ning.http.client.Request;
 import com.ning.http.client.filter.IOExceptionFilter;
 import com.ning.http.client.filter.RequestFilter;
 import com.ning.http.client.filter.ResponseFilter;
+import com.yahoo.parsec.filters.AlwaysTruePredicate;
+import com.yahoo.parsec.filters.NingRequestResponseFormatter;
+import com.yahoo.parsec.filters.ProfilingFilter;
+import com.yahoo.parsec.filters.ProfilingFormatter;
+import com.yahoo.parsec.filters.ResponseOrThrowable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.slf4j.Logger;
@@ -18,7 +24,12 @@ import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiPredicate;
 
 
 /**
@@ -53,6 +64,16 @@ public class ParsecAsyncHttpClient {
      */
     private ThreadPoolExecutor executorService;
 
+    private static final BiPredicate<Request, ResponseOrThrowable> PROFILE_LOGGING_PREDICATE
+            = new AlwaysTruePredicate();
+
+    private static final NingRequestResponseFormatter PROFILE_LOGGING_FORMATTER = new ProfilingFormatter();
+    private static final String PROFILE_LOGGING_LOG_NAME = "parsec.clients.profiling_log";
+
+
+    //for internal use only for now so it's easier to switch back-and-forth for debugging , use the wrapper for profiling
+    private boolean oldFashionProfiling = true;
+
     /**
      * Unused constructor.
      */
@@ -65,27 +86,42 @@ public class ParsecAsyncHttpClient {
      * @param builder builder
      */
     private ParsecAsyncHttpClient(final Builder builder) {
-        this(builder.configBuilder.build(), builder.cacheExpireAfterWrite, builder.cacheMaximumSize);
+        this(builder.configBuilder,
+                builder.cacheExpireAfterWrite,
+                builder.cacheMaximumSize,
+                builder.enableProfilingFilter);
     }
 
     /**
      * Private constructor.
-     * @param ningClientConfig Ning client config
+     * @param ningClientConfigBuilder Ning client config builder
      * @param cacheExpireAfterWrite cache expire time
      * @param cacheMaximumSize cache maximum size
      */
     private ParsecAsyncHttpClient(
-        final AsyncHttpClientConfig ningClientConfig,
+        final AsyncHttpClientConfig.Builder ningClientConfigBuilder,
         int cacheExpireAfterWrite,
-        int cacheMaximumSize) {
+        int cacheMaximumSize,
+        boolean enableProfilingFilter) {
         responseLoadingCache = new ParsecAsyncHttpResponseLoadingCache.Builder(this)
             .expireAfterWrite(cacheExpireAfterWrite, TimeUnit.SECONDS)
             .maximumSize(cacheMaximumSize)
             .build();
 
-        this.ningClientConfig = ningClientConfig;
+
+        if (enableProfilingFilter) {
+            oldFashionProfiling = false;
+            ningClientConfigBuilder.addRequestFilter(
+                    new ProfilingFilter(PROFILE_LOGGING_PREDICATE,
+                            PROFILE_LOGGING_FORMATTER,
+                            PROFILE_LOGGING_LOG_NAME));
+        }
+
+        this.ningClientConfig = ningClientConfigBuilder.build();
+
         executorService = (ThreadPoolExecutor) ningClientConfig.executorService();
         client = new AsyncHttpClient(ningClientConfig);
+
     }
 
     /**
@@ -144,8 +180,10 @@ public class ParsecAsyncHttpClient {
         final ParsecAsyncHttpRequest request,
         AsyncHandler<T> asyncHandler
     ) {
+
+        // profile logging the old way, keep it for now..
         ParsecAsyncHandlerWrapper<T> asyncHandlerWrapper =
-                new ParsecAsyncHandlerWrapper<>(asyncHandler, request.getNingRequest());
+                                new ParsecAsyncHandlerWrapper<>(asyncHandler, request.getNingRequest());
 
         if (!request.getRetryStatusCodes().isEmpty() ||
             !request.getRetryExceptions().isEmpty()) {
@@ -154,7 +192,7 @@ public class ParsecAsyncHttpClient {
                     new ParsecHttpRequestRetryCallable<>(
                         client,
                         request,
-                        asyncHandlerWrapper
+                        oldFashionProfiling ? asyncHandlerWrapper: asyncHandler
                     )
                 )
             );
@@ -162,7 +200,7 @@ public class ParsecAsyncHttpClient {
             return new ParsecCompletableFuture<>(
                 client.executeRequest(
                     request.getNingRequest(),
-                    asyncHandlerWrapper
+                    oldFashionProfiling ? asyncHandlerWrapper: asyncHandler
                 )
             );
         }
@@ -397,6 +435,7 @@ public class ParsecAsyncHttpClient {
         return ningClientConfig.isFollowRedirect();
     }
 
+
     /**
      * Static Builder class for {@link ParsecAsyncHttpClient}.
      *
@@ -422,6 +461,9 @@ public class ParsecAsyncHttpClient {
          * Cache max size.
          */
         private int cacheMaximumSize = DEFAULT_CACHE_MAX_SIZE;
+
+
+        private boolean enableProfilingFilter = false;
 
         /**
          * Constructor.
@@ -488,6 +530,15 @@ public class ParsecAsyncHttpClient {
         public Builder addResponseFilter(ResponseFilter responseFilter) {
             configBuilder.addResponseFilter(responseFilter);
             return this;
+        }
+
+        public Builder enableProfilingFilter(boolean enable){
+            enableProfilingFilter = enable;
+            return this;
+        }
+
+        public boolean isProfilingFilterEnabled() {
+            return enableProfilingFilter;
         }
 
         /**

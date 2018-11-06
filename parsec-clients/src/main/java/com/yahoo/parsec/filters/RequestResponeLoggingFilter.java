@@ -4,7 +4,6 @@
 package com.yahoo.parsec.filters;
 
 import com.ning.http.client.Request;
-import com.ning.http.client.Response;
 import com.ning.http.client.filter.FilterContext;
 import com.ning.http.client.filter.FilterException;
 import com.ning.http.client.filter.RequestFilter;
@@ -22,13 +21,13 @@ public class RequestResponeLoggingFilter implements RequestFilter {
 
     private static final String DEFAULT_TRACE_LOGGER_NAME = "parsec.clients.reqresp_log";
 
-    private static BiPredicate<Request, Response> DEFAULT_LOG_PREDICATE = new PostPutDeleteLoggingPredicate();
+    private static BiPredicate<Request, ResponseOrThrowable> DEFAULT_LOG_PREDICATE = new PostPutDeleteRequestPredicate();
 
-    private final BiPredicate<Request, Response> predicate;
+    private final BiPredicate<Request, ResponseOrThrowable> predicate;
     private final NingRequestResponseFormatter formatter;
     private final String traceLoggerName;
 
-    public RequestResponeLoggingFilter(BiPredicate<Request, Response> logPredicate,
+    public RequestResponeLoggingFilter(BiPredicate<Request, ResponseOrThrowable> logPredicate,
                                        NingRequestResponseFormatter formatter,
                                        String loggerName) {
         this.predicate = logPredicate;
@@ -44,7 +43,7 @@ public class RequestResponeLoggingFilter implements RequestFilter {
     public <T> FilterContext<T> filter(FilterContext<T> ctx) throws FilterException {
         return new FilterContext.FilterContextBuilder<>(ctx)
                 .asyncHandler(
-                        new ParsecAsyncHandlerWrapper(ctx.getAsyncHandler(),
+                        new LoggingAsyncHandlerWrapper(ctx.getAsyncHandler(),
                                 ctx.getRequest(),
                                 predicate,
                                 formatter,

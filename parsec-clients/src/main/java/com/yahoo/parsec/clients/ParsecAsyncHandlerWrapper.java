@@ -11,6 +11,7 @@ import java.net.InetAddress;
 
 /**
  * {@link AsyncHandler} wrapper that logs connection related information.
+ * @deprecated  Look into com.yahoo.parsec.filters.LoggingAsyncHandlerWrapper instead
  *
  * @param <T> T
  * @author sho
