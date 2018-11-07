@@ -9,8 +9,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class JsonFormatter implements ServletRequestResponseFomatter {
 
@@ -46,22 +48,24 @@ public class JsonFormatter implements ServletRequestResponseFomatter {
         respNode.put("payload", resp.getContent());
     }
 
-    private ObjectNode getReqHeadersNode(ParsecServletRequestWrapper request) {
+    ObjectNode getReqHeadersNode(ParsecServletRequestWrapper request) {
         ObjectNode headersNode = _OBJECT_MAPPER.createObjectNode();
         Enumeration<String> headerNames = request.getHeaderNames();
         while(headerNames.hasMoreElements()) {
             String key = headerNames.nextElement();
-            String val = request.getHeader(key);
+            Enumeration<String> headerValues = request.getHeaders(key);
+            String val = Collections.list(headerValues).stream().collect(Collectors.joining(","));
             headersNode.put(key, val);
         }
         return headersNode;
     }
 
-    private ObjectNode getRespHeadersNode(ParsecServletResponseWrapper response) {
+    ObjectNode getRespHeadersNode(ParsecServletResponseWrapper response) {
         ObjectNode headersNode = _OBJECT_MAPPER.createObjectNode();
         Collection<String> headerNames = response.getHeaderNames();
         for (String header: headerNames) {
-            headersNode.put(header, response.getHeader(header));
+            String headerValue = response.getHeaders(header).stream().collect(Collectors.joining(","));
+            headersNode.put(header, headerValue);
         }
         return headersNode;
     }
