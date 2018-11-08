@@ -14,7 +14,6 @@ import com.yahoo.parsec.clients.ParsecAsyncHttpClient;
 import com.yahoo.parsec.clients.ParsecAsyncHttpRequest;
 import com.yahoo.parsec.test.WireMockBaseTest;
 import net.javacrumbs.jsonunit.JsonMatchers;
-import net.javacrumbs.jsonunit.core.Option;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
@@ -39,7 +38,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
@@ -147,9 +145,11 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
 
         String message = loggingEventArgumentCaptor.getValue().getMessage();
 
-        assertThat( message,
+        assertThat(message,
                 JsonMatchers.jsonEquals(pattern)
-                            .when(Option.IGNORING_EXTRA_FIELDS, IGNORING_EXTRA_ARRAY_ITEMS)
+                            .whenIgnoringPaths("request.headers.Accept-Encoding",
+                                    "response.headers.Content-Type","response.headers.Server","response.headers.Transfer-Encoding")
+
         );
 
 
@@ -193,9 +193,9 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
         String pattern = createLogStringPatternForError(requestMethod, request.getUrl(), "",
                 stubHeaders, stubReqBodyJson, null);
 
-        assertThat( message,
+        assertThat(message,
                 JsonMatchers.jsonEquals(pattern)
-                        .when(Option.IGNORING_EXTRA_FIELDS, IGNORING_EXTRA_ARRAY_ITEMS)
+                        .whenIgnoringPaths("request.headers.Accept-Encoding")
         );
     }
 
@@ -206,6 +206,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
         Map<String, String> headers = reqHeaders.entrySet().stream().collect(
                 Collectors.toMap(Map.Entry::getKey,
                         e -> String.join(",", e.getValue())));
+
 
         String reqHeaderString = _OBJECT_MAPPER.writeValueAsString(headers);
         String pattern = String.format("{" +
