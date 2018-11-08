@@ -7,6 +7,7 @@ import spock.lang.Specification
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import net.javacrumbs.jsonunit.JsonAssert
 
 class JsonFormatterTest extends Specification {
     def "call GetReqHeadersNode() with ParsecServletRequestWrapper should return json node as expected"() {
@@ -45,5 +46,28 @@ class JsonFormatterTest extends Specification {
         headers | headerValues | expectedResult
         ["header"] | ["headerValue1", "headerValue2"] | '{"header":"headerValue1,headerValue2"}'
         ["key1","key2"] | ["val"] | '{"key1":"val","key2":"val"}'
+    }
+
+    def "format() should return expected json string for logging"() {
+        given:
+        ParsecServletRequestWrapper mockReq = Mock(constructorArgs: [Mock(HttpServletRequest)])
+        mockReq.getMethod() >> "POST"
+        mockReq.getRequestURI() >> "http://dummyUri/"
+        mockReq.getQueryString() >> "key=val"
+        mockReq.getHeaderNames() >> Collections.enumeration(Arrays.asList("reqHeader"))
+        mockReq.getHeaders("reqHeader") >> Collections.enumeration(["reqHeaderValue"])
+
+        ParsecServletResponseWrapper mockResp = Mock(constructorArgs: [Mock(HttpServletResponse)])
+        mockResp.getStatus() >> 200
+        mockResp.getHeaderNames() >> ["respHeader"]
+        mockResp.getHeaders("respHeader") >> ["respHeaderValue"]
+        mockResp.getContent() >> '{"key":"value"}'
+
+        when:
+        def json = new JsonFormatter().format(mockReq, mockResp, null)
+
+        then:
+        def expectedJson = '{"time":"${json-unit.any-number}","request":{"method":"POST","uri":"http://dummyUri/?key=val","headers":{"reqHeader":"reqHeaderValue"},"payload":null},"response":{"status":200,"headers":{"respHeader":"respHeaderValue"},"payload":"{\\"key\\":\\"value\\"}"}}'
+        JsonAssert.assertJsonEquals(expectedJson, json)
     }
 }

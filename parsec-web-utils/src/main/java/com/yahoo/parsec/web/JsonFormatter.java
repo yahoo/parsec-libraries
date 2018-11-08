@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ public class JsonFormatter implements ServletRequestResponseFomatter {
                          Map<String, Object> additionalArgs) {
         try {
             ObjectNode root = _OBJECT_MAPPER.createObjectNode();
+            root.put("time", (System.currentTimeMillis() / 1000L));
             ObjectNode reqNode = root.with("request");
             fillRequestNode(req, reqNode);
             ObjectNode respNode = root.with("response");
@@ -36,8 +38,11 @@ public class JsonFormatter implements ServletRequestResponseFomatter {
 
     private void fillRequestNode(ParsecServletRequestWrapper req, ObjectNode reqNode) throws IOException {
         reqNode.put("method", req.getMethod());
-        reqNode.put("uri", req.getRequestURI());
-        reqNode.put("query", req.getQueryString());
+        StringBuilder uri = new StringBuilder(req.getRequestURI());
+        if (req.getQueryString() != null) {
+            uri.append("?").append(req.getQueryString());
+        }
+        reqNode.put("uri", uri.toString());
         reqNode.set("headers", getReqHeadersNode(req));
         reqNode.put("payload", req.getContent());
     }
