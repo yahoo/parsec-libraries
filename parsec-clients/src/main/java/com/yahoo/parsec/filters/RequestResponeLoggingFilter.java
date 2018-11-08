@@ -19,7 +19,7 @@ import java.util.function.BiPredicate;
  */
 public class RequestResponeLoggingFilter implements RequestFilter {
 
-    private static final String DEFAULT_TRACE_LOGGER_NAME = "parsec.clients.reqresp_log";
+    static final String DEFAULT_TRACE_LOGGER_NAME = "parsec.clients.reqresp_log";
 
     private static BiPredicate<Request, ResponseOrThrowable> DEFAULT_LOG_PREDICATE = new PostPutDeleteRequestPredicate();
 
