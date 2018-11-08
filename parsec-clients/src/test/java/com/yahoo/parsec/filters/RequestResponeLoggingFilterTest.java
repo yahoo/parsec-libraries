@@ -209,6 +209,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
 
         String reqHeaderString = _OBJECT_MAPPER.writeValueAsString(headers);
         String pattern = String.format("{" +
+                        "\"time\":\"${json-unit.any-number}\","+
                         "\"request\": {" +
                             "\"method\": \"%s\"," +
                             "\"uri\": \"%s\"," +
@@ -250,6 +251,7 @@ public class RequestResponeLoggingFilterTest extends WireMockBaseTest {
         String respHeaderString = _OBJECT_MAPPER.writeValueAsString(headers);
 
         String pattern = String.format("{" +
+                "\"time\":\"${json-unit.any-number}\","+
                 "\"request\": {" +
                     "\"method\": \"%s\"," +
                     "\"uri\": \"%s\"," +

@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
+ * SEE ALSO com.yahoo.parsec.web.JsonFormatter
  * Created by baiyi on 11/08/2018.
  */
 public class NingJsonFormatter implements NingRequestResponseFormatter {
@@ -24,6 +25,7 @@ public class NingJsonFormatter implements NingRequestResponseFormatter {
     @Override
     public String format(Request req, Response resp, Map<String, Object> additionalArgs) {
         ObjectNode root = _OBJECT_MAPPER.createObjectNode();
+        root.put("time", (System.currentTimeMillis() / 1000L));
         fillNode(req, root.with("request"));
         fillNode(resp, root.with("response"));
 
