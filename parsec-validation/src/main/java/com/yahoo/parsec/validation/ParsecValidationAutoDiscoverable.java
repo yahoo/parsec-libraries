@@ -4,6 +4,7 @@
 package com.yahoo.parsec.validation;
 
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
 import javax.ws.rs.Priorities;
 import javax.ws.rs.core.Configuration;
@@ -28,8 +29,8 @@ public class ParsecValidationAutoDiscoverable implements AutoDiscoverable {
         if (!config.isRegistered(ValidationConfigurationContextResolver.class)) {
             context.register(ValidationConfigurationContextResolver.class, priority);
         }
-        if (!config.isRegistered(ParsecMoxyProvider.class)) {
-            context.register(ParsecMoxyProvider.class, priority);
+        if (!config.isRegistered(ParsecMoxyFeature.class)) {
+            context.register(ParsecMoxyFeature.class, priority);
         }
         if (!config.isRegistered(JaxbExceptionMapper.class)) {
             context.register(JaxbExceptionMapper.class, priority);
