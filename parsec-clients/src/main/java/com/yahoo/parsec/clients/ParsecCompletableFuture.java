@@ -3,6 +3,7 @@
 
 package com.yahoo.parsec.clients;
 
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -44,7 +45,8 @@ public class ParsecCompletableFuture<T> extends CompletableFuture<T> {
                 public void onFailure(Throwable t) {
                     completeExceptionally(t);
                 }
-            });
+            },
+            MoreExecutors.directExecutor());
         }
     }
 
