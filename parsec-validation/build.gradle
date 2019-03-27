@@ -11,7 +11,7 @@ apply plugin: "io.spring.dependency-management"
 
 dependencyManagement{
     imports {
-        mavenBom 'org.glassfish.jersey:jersey-bom:2.18'
+        mavenBom "org.glassfish.jersey:jersey-bom:${jerseyVersion}"
     }
 }
 
@@ -21,15 +21,22 @@ dependencies{
     compile group:'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: jacksonVersion
     compile group:'org.apache.commons'         , name: 'commons-lang3'              , version: commonsLang3Version
 
+    // For Java 11 compatible
+    compile group:'javax.xml.bind'             , name: 'jaxb-api'                   , version: '2.3.0'
+    compile group:'com.sun.xml.bind'           , name: 'jaxb-core'                  , version: '2.3.0.1'
+    compile group:'com.sun.xml.bind'           , name: 'jaxb-impl'                  , version: '2.3.0.1'
+    compile group:'javax.activation'           , name: 'activation'                 , version: '1.1.1'
+
     //BOM defined
     compile 'org.glassfish.jersey.media:jersey-media-moxy'
 
     testCompile(group: 'org.glassfish.jersey.test-framework.providers', name: 'jersey-test-framework-provider-jetty', version: jerseyVersion){
         exclude(module: "javax.servlet-api")
     }
-    testCompile group: 'javax.servlet' , name: 'javax.servlet-api' , version: servletApiVersion
-    testCompile group: 'org.mockito'   , name: 'mockito-core'      , version: mockitoVersion
-    testCompile group: 'org.testng'    , name: 'testng'            , version: testNGVersion
+    testCompile group: 'javax.servlet'              , name: 'javax.servlet-api' , version: servletApiVersion
+    testCompile group: 'org.mockito'                , name: 'mockito-core'      , version: mockitoVersion
+    testCompile group: 'org.testng'                 , name: 'testng'            , version: testNGVersion
+    testCompile group: 'org.glassfish.jersey.inject', name: 'jersey-hk2'        , version: jerseyVersion
 
     //BOM defined
     testCompile 'org.glassfish.jersey.containers:jersey-container-servlet'
