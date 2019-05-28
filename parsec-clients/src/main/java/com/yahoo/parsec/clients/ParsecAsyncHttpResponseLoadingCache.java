@@ -197,6 +197,19 @@ final class ParsecAsyncHttpResponseLoadingCache {
         }
 
         /**
+         * Set cache refresh after write duration.
+         * It will make a key become eligible for refresh, but actually be initiated when the entry is queried.
+         *
+         * @param duration Refresh duration
+         * @param unit Refresh time unit
+         * @return {@link ParsecAsyncHttpResponseLoadingCache.Builder}
+         */
+        public Builder refreshAfterWrite(final long duration, final TimeUnit unit) {
+            caffeine.refreshAfterWrite(duration, unit);
+            return this;
+        }
+
+        /**
          * Set cache expire after write duration.
          *
          * @param duration Expire duration

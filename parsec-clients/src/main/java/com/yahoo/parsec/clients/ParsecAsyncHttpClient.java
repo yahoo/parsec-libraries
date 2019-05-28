@@ -91,9 +91,10 @@ public class ParsecAsyncHttpClient {
      */
     private ParsecAsyncHttpClient(final Builder builder) {
         this(builder.configBuilder,
-             builder.cacheExpireAfterWrite,
-             builder.cacheMaximumSize,
-             builder.enableProfilingFilter);
+                builder.cacheRefreshAfterWrite,
+                builder.cacheExpireAfterWrite,
+                builder.cacheMaximumSize,
+                builder.enableProfilingFilter);
     }
 
     /**
@@ -104,14 +105,18 @@ public class ParsecAsyncHttpClient {
      */
     private ParsecAsyncHttpClient(
         final AsyncHttpClientConfig.Builder ningClientConfigBuilder,
+        int cacheRefreshAfterWrite,
         int cacheExpireAfterWrite,
         int cacheMaximumSize,
         boolean enableProfilingFilter) {
-        responseLoadingCache = new ParsecAsyncHttpResponseLoadingCache.Builder(this)
-            .expireAfterWrite(cacheExpireAfterWrite, TimeUnit.SECONDS)
-            .maximumSize(cacheMaximumSize)
-            .build();
+        ParsecAsyncHttpResponseLoadingCache.Builder cacheBuilder = new ParsecAsyncHttpResponseLoadingCache.Builder(this)
+                .expireAfterWrite(cacheExpireAfterWrite, TimeUnit.SECONDS)
+                .maximumSize(cacheMaximumSize);
 
+        if(cacheRefreshAfterWrite > 0)
+            cacheBuilder.refreshAfterWrite(cacheRefreshAfterWrite, TimeUnit.SECONDS);
+
+        responseLoadingCache = cacheBuilder.build();
 
         if (enableProfilingFilter) {
             //so that there's only one filter.
@@ -461,10 +466,14 @@ public class ParsecAsyncHttpClient {
         private int cacheExpireAfterWrite = 2;
 
         /**
+         * Cache refresh time.
+         */
+        private int cacheRefreshAfterWrite = -1;
+
+        /**
          * Cache max size.
          */
         private int cacheMaximumSize = DEFAULT_CACHE_MAX_SIZE;
-
 
         private boolean enableProfilingFilter = false;
 
@@ -778,6 +787,16 @@ public class ParsecAsyncHttpClient {
          */
         public Builder setCacheExpireAfterWrite(int cacheExpireAfterWrite) {
             this.cacheExpireAfterWrite = cacheExpireAfterWrite;
+            return this;
+        }
+
+        /**
+         * Set whether cache need auto refresh mechanism. 
+         * @param cacheRefreshAfterWrite How long will a key become eligible for refresh after write
+         * @return {@link ParsecAsyncHttpClient.Builder}
+         */
+        public Builder setCacheNeedAsyncRefresh(int cacheRefreshAfterWrite) {
+            this.cacheRefreshAfterWrite = cacheRefreshAfterWrite;
             return this;
         }
 
