@@ -1,4 +1,4 @@
-#Parsec Config
+# Parsec Config
 The Parsec Config library lets you set configurations based on different environment, or profile, such as alpha, beta or production.
 It allows you to introduce a set of standardized/best practice configuration definition for your Java web application.
 You can easily understand how to use this library by following the implementation steps below

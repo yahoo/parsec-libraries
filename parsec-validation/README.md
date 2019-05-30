@@ -1,9 +1,9 @@
-#Parsec Validation (Input Validation)
+# Parsec Validation (Input Validation)
 
 + Define standard method for input validation in Parsec Java web applications
 + Support web applications' requirement to validate user input depending on their business logic
 
-###Design and Implementation
+### Design and Implementation
 + Adopt [bean validation in Jersey](https://jersey.java.net/documentation/latest/bean-validation.html), which is Jersey framework's native feature
 + Jersey bean validation depends directly on Hibernate Validator. It supports validating all forms of input from Jersey framework such as @PathParam, @QueryParam, @FormParam, and request body json object by declaring hibernate validation annotations (such as @Size, @Null, @NotNull, ...)
 + User can also customize their validation exception {code}, {message} by defining server properties in DefaultWebListner.java
@@ -11,13 +11,13 @@
 ConstraintViolationException is higher than others)
 + Integrate hibernate validation annotation with Parsec RDL Generator, which you can define hibernate validation annotation in the rdl schema (.rdl) and the annotations will be generated
 
-###Package
+### Package
 + Requires jersey-bean-validation dependency
 + Parsec Validation is added to the dependency by default if the project inheritis from Parsec Base Build.
 + When Parsec Validation library is added to the dependencies, validation feature will be enabled automatically without requiring any additional function calls.
 + Implemented ParsecValidationExceptionMapper to catch ConstraintViolationException (which is thrown by Hibernate Validator) and the error layout is reformmated to follow TC Rest API Convention
 
-###Dependency
+### Dependency
 ```
 repositories {
     mavenCentral()
@@ -28,7 +28,7 @@ dependencies {
 }
 ```
 
-###Error Layout Example
+### Error Layout Example
 ```
 {
     "error":{
@@ -52,7 +52,7 @@ dependencies {
 }
 ```
 
-###Supported Validation Constraints
+### Supported Validation Constraints
 
 | constraint | supported RDL data type |  Use |
 |:-----------|:------------------------|:-----|
@@ -71,7 +71,7 @@ dependencies {
 | x_null            |	any type	| value should be null |
 | x_digits=”integer=x,fraction=y”	| float32, float64	| value should match x in integer part, and also match y in fraction part |
 
-###Using Validation Groups
+### Using Validation Groups
 Validation groups allows you to control the set of constraints to enable per object for an endpoint.
 Please note that only data object validation supports this feature.
 The syntax to define constraint validation groups follows this syntax: <constraint>=”groups=<groups> [, <other settings>]”. Where:
@@ -91,7 +91,7 @@ Object someObject (x_must_validate="update");
 ```
 **Please note that the defined validation group must exist (i.e. used in an object), otherwise you may receive Java compile time errors.
 
-###Customizing Validation Error Code and Message
+### Customizing Validation Error Code and Message
 Customize validation error {code}, {message} in *DefaultWebListener.java*:
 ```java
 @WebListener
@@ -109,7 +109,7 @@ public class DefaultWebListener implements ServletContextListener {
 }
 ```
 
-###Example of Adding Validation in RDL
+### Example of Adding Validation in RDL
 + Adding validation to your name field in User struct at src/main/rdl/sample.rdl - Here we set the limitation to User.name.
 We define the length of the name to be >= 3 && <=5
 ```
