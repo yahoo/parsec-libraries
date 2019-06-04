@@ -3,8 +3,6 @@
 
 package com.yahoo.parsec.clients;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -97,7 +95,7 @@ public class ParsecAsyncHttpClient {
                 builder.cacheExpireAfterWrite,
                 builder.cacheMaximumSize,
                 builder.enableProfilingFilter,
-                builder.recordStats);
+                builder.recordCacheStats);
     }
 
     /**
@@ -112,7 +110,7 @@ public class ParsecAsyncHttpClient {
         int cacheExpireAfterWrite,
         int cacheMaximumSize,
         boolean enableProfilingFilter,
-        boolean recordStats
+        boolean recordCacheStats
     ) {
         ParsecAsyncHttpResponseLoadingCache.Builder cacheBuilder = new ParsecAsyncHttpResponseLoadingCache.Builder(this)
                 .expireAfterWrite(cacheExpireAfterWrite, TimeUnit.SECONDS)
@@ -121,7 +119,7 @@ public class ParsecAsyncHttpClient {
         if(cacheRefreshAfterWrite > 0)
             cacheBuilder.refreshAfterWrite(cacheRefreshAfterWrite, TimeUnit.SECONDS);
 
-        if (recordStats) {
+        if (recordCacheStats) {
             cacheBuilder.recordStats();
         }
 
@@ -495,7 +493,7 @@ public class ParsecAsyncHttpClient {
 
         private boolean enableProfilingFilter = false;
 
-        private boolean recordStats = false;
+        private boolean recordCacheStats = false;
 
         /**
          * Constructor.
@@ -573,8 +571,8 @@ public class ParsecAsyncHttpClient {
             return enableProfilingFilter;
         }
 
-        public Builder recordStats(){
-            recordStats = true;
+        public Builder recordCacheStats(){
+            recordCacheStats = true;
             return this;
         }
 

@@ -549,7 +549,7 @@ public class ParsecAsyncHttpClientTest {
 
     @Test
     public void testEnableRecordStatsShouldReturnStatsData() throws Exception {
-        client = new ParsecAsyncHttpClient.Builder().recordStats().build();
+        client = new ParsecAsyncHttpClient.Builder().recordCacheStats().build();
         ParsecAsyncHttpRequest request = new ParsecAsyncHttpRequest.Builder().setUrl(baseUrl + "/200").build();
         client.execute(request).get();
         client.execute(request).get();
