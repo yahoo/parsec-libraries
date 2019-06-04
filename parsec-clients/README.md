@@ -1,4 +1,4 @@
-#Parsec Client
+# Parsec Client
 The Parsec Client Library provides an async HTTP client that supports the following:
 
 + Retry by response HTTP status code
@@ -7,7 +7,7 @@ The Parsec Client Library provides an async HTTP client that supports the follow
 + Profiling logs (connection time, and etc)
 + Splunk compatible log
 
-##Basic Usage Example
+## Basic Usage Example
 Code example for basic usage example:
 ```java
 // Initializing a client
@@ -35,11 +35,11 @@ Response response = client.execute(postRequest).get();
 
 ```
 
-##Asynchronous and Blocking Requests
+## Asynchronous and Blocking Requests
 Both ParsecAsyncHttpClient.execute and ParsecAsycHttpClient.criticalExecute returns CompletableFuture and is therefore
 asynchronous / non-blocking by nature. If you need to make blocking calls, please use CompletableFuture.get method.
 
-##Retrying Requests by Response HTTP Status Code
+## Retrying Requests by Response HTTP Status Code
 Requests can be retried based on the response's HTTP status code. To add or remove a retry HTTP status code, please
 use ParsecAsyncHttpRequest.Builder.addRetryStatusCode and ParsecAsyncHttpRequest.Builder.removeRetryStatusCode method.
 The maximum number of **total** retries for all status code can be controlled using ParsecAsyncHttpRequest.Builder.setMaxRetries method.
@@ -54,7 +54,7 @@ ParsecAsyncHttpRequest request = new ParsecAsyncHttpRequest.Builder()
     .build();
 ```
 
-##In Memory Short Duration Response Cache
+## In Memory Short Duration Response Cache
 By default the client enables an in memory short duration loading cache for GET requests. This mean for all identical GET requests that occur in a 2 seconds window,
 only the first request will be executed while all remaining requests will be responded from cache. If fresh copy of the data is required (for example,
 during a get update scenario), please use ParsecAsyncHttpClient.criticalExecute method or ParsecAsyncHttpRequest.Builder.setCriticalGet method.

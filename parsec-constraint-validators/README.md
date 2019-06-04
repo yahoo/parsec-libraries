@@ -1,8 +1,8 @@
-#Parsec Constraint Validators
+# Parsec Constraint Validators
 
 The constraint validators library contains a list of useful annotations that can be used when building your web application.
 
-##Dependency
+## Dependency
 ```
 repositories {
     mavenCentral()
@@ -12,7 +12,7 @@ dependencies {
 }
 ```
 
-##Usage
+## Usage
 
 Import the package via:
 ```
