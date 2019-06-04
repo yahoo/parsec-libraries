@@ -3,6 +3,8 @@
 
 package com.yahoo.parsec.clients;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -94,7 +96,8 @@ public class ParsecAsyncHttpClient {
                 builder.cacheRefreshAfterWrite,
                 builder.cacheExpireAfterWrite,
                 builder.cacheMaximumSize,
-                builder.enableProfilingFilter);
+                builder.enableProfilingFilter,
+                builder.recordStats);
     }
 
     /**
@@ -108,13 +111,19 @@ public class ParsecAsyncHttpClient {
         int cacheRefreshAfterWrite,
         int cacheExpireAfterWrite,
         int cacheMaximumSize,
-        boolean enableProfilingFilter) {
+        boolean enableProfilingFilter,
+        boolean recordStats
+    ) {
         ParsecAsyncHttpResponseLoadingCache.Builder cacheBuilder = new ParsecAsyncHttpResponseLoadingCache.Builder(this)
                 .expireAfterWrite(cacheExpireAfterWrite, TimeUnit.SECONDS)
                 .maximumSize(cacheMaximumSize);
 
         if(cacheRefreshAfterWrite > 0)
             cacheBuilder.refreshAfterWrite(cacheRefreshAfterWrite, TimeUnit.SECONDS);
+
+        if (recordStats) {
+            cacheBuilder.recordStats();
+        }
 
         responseLoadingCache = cacheBuilder.build();
 
@@ -245,6 +254,15 @@ public class ParsecAsyncHttpClient {
         }
 
         return criticalExecute(request);
+    }
+
+    /**
+     * Get cache statistics
+     *
+     * @return cache statistics
+     */
+    public CacheStats getCacheStats() {
+        return new CacheStats(responseLoadingCache.synchronous().stats());
     }
 
     /**
@@ -477,6 +495,8 @@ public class ParsecAsyncHttpClient {
 
         private boolean enableProfilingFilter = false;
 
+        private boolean recordStats = false;
+
         /**
          * Constructor.
          */
@@ -551,6 +571,11 @@ public class ParsecAsyncHttpClient {
 
         public boolean isProfilingFilterEnabled() {
             return enableProfilingFilter;
+        }
+
+        public Builder recordStats(){
+            recordStats = true;
+            return this;
         }
 
         /**
@@ -808,6 +833,57 @@ public class ParsecAsyncHttpClient {
         public Builder setCacheMaximumSize(int cacheMaximumSize) {
             this.cacheMaximumSize = cacheMaximumSize;
             return this;
+        }
+    }
+
+    /**
+     * simple wrap caffeine CacheStats class, avoid direct expose the interface.
+     */
+    public static class CacheStats {
+        com.github.benmanes.caffeine.cache.stats.CacheStats cacheStats;
+
+        public CacheStats(com.github.benmanes.caffeine.cache.stats.CacheStats cacheStats) {
+            this.cacheStats = cacheStats;
+        }
+
+        public double hitRate() {
+            return this.cacheStats.hitRate();
+        }
+
+        public double missRate() {
+            return this.cacheStats.missRate();
+        }
+
+        public long requestCount() {
+            return this.cacheStats.requestCount();
+        }
+
+        public long evictionCount() {
+            return this.cacheStats.evictionCount();
+        }
+
+        public long hitCount() {
+            return this.cacheStats.hitCount();
+        }
+
+        public long missCount() {
+            return this.cacheStats.missCount();
+        }
+
+        public double averageLoadPenalty() {
+            return this.cacheStats.averageLoadPenalty();
+        }
+
+        public double loadCount() {
+            return this.cacheStats.loadCount();
+        }
+
+        public long loadFailureCount() {
+            return this.cacheStats.loadFailureCount();
+        }
+
+        public long loadSuccessCount() {
+            return this.cacheStats.loadSuccessCount();
         }
     }
 }

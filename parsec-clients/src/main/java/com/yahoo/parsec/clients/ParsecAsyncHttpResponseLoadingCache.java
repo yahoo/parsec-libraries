@@ -232,6 +232,11 @@ final class ParsecAsyncHttpResponseLoadingCache {
             return this;
         }
 
+        public Builder recordStats() {
+            caffeine.recordStats();
+            return this;
+        }
+
         /**
          * Set cache clean up interval.
          *

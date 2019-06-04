@@ -3,6 +3,7 @@
 
 package com.yahoo.parsec.clients;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.filter.FilterContext;
 import com.ning.http.client.filter.IOExceptionFilter;
@@ -544,5 +545,18 @@ public class ParsecAsyncHttpClientTest {
 
         assertTrue(System.currentTimeMillis() - start <= 150);
         assertTrue(future2.get() - start >= 100);
+    }
+
+    @Test
+    public void testEnableRecordStatsShouldReturnStatsData() throws Exception {
+        client = new ParsecAsyncHttpClient.Builder().recordStats().build();
+        ParsecAsyncHttpRequest request = new ParsecAsyncHttpRequest.Builder().setUrl(baseUrl + "/200").build();
+        client.execute(request).get();
+        client.execute(request).get();
+
+        ParsecAsyncHttpClient.CacheStats cacheStats = client.getCacheStats();
+        assertEquals(cacheStats.requestCount(), 2);
+        assertEquals(cacheStats.hitCount(), 1);
+        assertEquals(cacheStats.missCount(), 1);
     }
 }
