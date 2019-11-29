@@ -24,7 +24,7 @@ import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -53,7 +53,7 @@ public class ParsecAsyncHttpClient {
     /**
      * Retry interval
      */
-    private Long retryIntervalMillis;
+    private Optional<Long> retryIntervalMillis;
 
     /**
      * Ning client config.
@@ -118,7 +118,7 @@ public class ParsecAsyncHttpClient {
         int cacheMaximumSize,
         boolean enableProfilingFilter,
         boolean recordCacheStats,
-        Long retryIntervalMillis
+        Optional<Long> retryIntervalMillis
     ) {
         ParsecAsyncHttpResponseLoadingCache.Builder cacheBuilder = new ParsecAsyncHttpResponseLoadingCache.Builder(this)
                 .expireAfterWrite(cacheExpireAfterWrite, TimeUnit.SECONDS)
@@ -213,11 +213,11 @@ public class ParsecAsyncHttpClient {
             );
         } else {
             ParsecHttpRequestRetryCallable<T> retryCallable;
-            if (Objects.isNull(retryIntervalMillis)) {
+            if (retryIntervalMillis.isEmpty()) {
                 retryCallable = new ParsecHttpRequestRetryCallable<>(client, request, practicalAsyncHandler);
             } else {
                 retryCallable = new ParsecHttpRequestRetryCallable<>(
-                    client, request, practicalAsyncHandler, retryIntervalMillis);
+                    client, request, practicalAsyncHandler, retryIntervalMillis.get());
             }
             return new ParsecCompletableFuture<>(executorService.submit(retryCallable));
         }
@@ -496,7 +496,7 @@ public class ParsecAsyncHttpClient {
         /**
          * Retry interval
          */
-        private Long retryIntervalMillis;
+        private Optional<Long> retryIntervalMillis = Optional.empty();
 
         private boolean enableProfilingFilter = false;
 
@@ -846,7 +846,7 @@ public class ParsecAsyncHttpClient {
          * @return {@link ParsecAsyncHttpClient.Builder}
          */
         public Builder setRetryIntervalInMilliSeconds(long milliseconds) {
-            this.retryIntervalMillis = milliseconds;
+            this.retryIntervalMillis = Optional.of(milliseconds);
             return this;
         }
     }
