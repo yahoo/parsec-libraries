@@ -1,3 +1,7 @@
+# Since the default distribution of Travis was migrated from Trusty to Xenial, and oraclejdk8 is not supported in Xenial.
+# So in order to use oraclejdk8, we have to explicitly specify the distribution to Trusty.
+# See: https://blog.travis-ci.com/2019-04-15-xenial-default-build-environment
+dist: trusty
 language: java
 jdk:
 - oraclejdk8

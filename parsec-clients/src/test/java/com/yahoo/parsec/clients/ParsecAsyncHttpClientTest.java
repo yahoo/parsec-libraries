@@ -9,6 +9,10 @@ import com.ning.http.client.filter.FilterContext;
 import com.ning.http.client.filter.IOExceptionFilter;
 import com.ning.http.client.filter.RequestFilter;
 import com.ning.http.client.filter.ResponseFilter;
+
+import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -23,7 +27,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
 
 
@@ -491,6 +503,53 @@ public class ParsecAsyncHttpClientTest {
             .addRetryException(TimeoutException.class)
             .setRequestTimeout(10)
             .setMaxRetries(2)
+            .build();
+
+        Response response = client.execute(request).get();
+        assertNotNull(response.getHeaderString(ParsecClientDefine.HEADER_HOST));
+    }
+
+    @Test
+    public void testSettingRetryIntervalWillAffectRetryBehavior() throws Exception {
+        ThreadPoolExecutor executorService = mock(ThreadPoolExecutor.class);
+        AsyncHttpClientConfig clientConfig = mock(AsyncHttpClientConfig.class);
+        when(clientConfig.executorService()).thenReturn(executorService);
+        AsyncHttpClientConfig.Builder configBuilder = mock(AsyncHttpClientConfig.Builder.class);
+        when(configBuilder.build()).thenReturn(clientConfig);
+
+        client = new ParsecAsyncHttpClient.Builder(configBuilder)
+            .setRetryIntervalInMilliSeconds(100)
+            .build();
+
+        ParsecAsyncHttpRequest request = new ParsecAsyncHttpRequest.Builder()
+            .setCriticalGet(true)
+            .setUrl(baseUrl + "/sleep/25")
+            .addRetryException(TimeoutException.class)
+            .setRequestTimeout(10)
+            .setMaxRetries(2)
+            .build();
+
+        CompletableFuture completableFuture = client.execute(request);
+        assertNotNull(completableFuture);
+        assertTrue(completableFuture instanceof ParsecCompletableFuture);
+
+        ArgumentCaptor<ParsecHttpRequestRetryCallable> argumentCaptor = ArgumentCaptor.forClass(ParsecHttpRequestRetryCallable.class);
+        verify(executorService, times(1)).submit(argumentCaptor.capture());
+        ParsecHttpRequestRetryCallable retryCallable = argumentCaptor.getValue();
+        assertEquals(100, retryCallable.getRetryDelayer().getRetryIntervalMillis());
+    }
+
+    @Test
+    public void testSettingRetryIntervalCanSuccessfulRetry() throws Exception {
+        ParsecAsyncHttpRequest request = new ParsecAsyncHttpRequest.Builder()
+            .setCriticalGet(true)
+            .setUrl(baseUrl + "/500")
+            .addRetryStatusCode(500)
+            .setMaxRetries(2)
+            .build();
+
+        client = new ParsecAsyncHttpClient.Builder()
+            .setRetryIntervalInMilliSeconds(100)
             .build();
 
         Response response = client.execute(request).get();

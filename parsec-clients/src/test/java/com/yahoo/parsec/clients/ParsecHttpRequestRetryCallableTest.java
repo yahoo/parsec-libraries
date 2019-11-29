@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
@@ -123,4 +125,30 @@ public class ParsecHttpRequestRetryCallableTest {
         assertEquals(response.getStatusCode(), 200);
     }
 
+    @Test
+    public void testRetryDelay() throws Exception {
+        request = new ParsecAsyncHttpRequest.Builder()
+            .addRetryStatusCode(408)
+            .setMaxRetries(3)
+            .build();
+        int [] returnStatusCodes = {408, 408, 200};
+        setMockClientReturnStatusCode(returnStatusCodes);
+
+        ParsecHttpRequestRetryCallable.RetryDelayer retryDelayer =
+            mock(ParsecHttpRequestRetryCallable.RetryDelayer.class);
+
+        ParsecHttpRequestRetryCallable<Response> parsecHttpRequestRetryCallable =
+            new ParsecHttpRequestRetryCallable<>(mockClient, request, null, retryDelayer);
+
+        Response response = parsecHttpRequestRetryCallable.call();
+        List<Response> responses = parsecHttpRequestRetryCallable.getResponses();
+
+        assertEquals(responses.size(), 3);
+        assertEquals(responses.get(0).getStatusCode(), 408);
+        assertEquals(responses.get(1).getStatusCode(), 408);
+        assertEquals(responses.get(2).getStatusCode(), 200);
+        assertEquals(response.getStatusCode(), 200);
+
+        verify(retryDelayer, times(2)).delay();
+    }
 }
