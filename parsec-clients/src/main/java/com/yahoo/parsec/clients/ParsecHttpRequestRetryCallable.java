@@ -17,11 +17,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * {@link Callable} implementation that handles HTTP request retry based on response status code.
  */
 class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
+
+    /**
+     * By default, do not delay the retries.
+     */
+    private static final long DEFAULT_RETRY_INTERVAL = 0;
 
     /**
      * Logger.
@@ -42,6 +48,11 @@ class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
      * Request.
      */
     private final ParsecAsyncHttpRequest request;
+
+    /**
+     * For delayed retries
+     */
+    private RetryDelayer retryDelayer;
 
     /**
      * Response list.
@@ -67,9 +78,48 @@ class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
      */
     public ParsecHttpRequestRetryCallable(
         final AsyncHttpClient client, final ParsecAsyncHttpRequest request, final AsyncHandler<T> asyncHandler) {
+        this(client, request, asyncHandler, DEFAULT_RETRY_INTERVAL);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param client              client
+     * @param request             request
+     * @param asyncHandler        async handler
+     * @param retryIntervalMillis retry interval in milliseconds
+     */
+    public ParsecHttpRequestRetryCallable(
+        final AsyncHttpClient client,
+        final ParsecAsyncHttpRequest request,
+        final AsyncHandler<T> asyncHandler,
+        long retryIntervalMillis
+    ) {
         this.client = client;
         this.request = request;
         this.asyncHandler = asyncHandler;
+        this.retryDelayer = new RetryDelayer(retryIntervalMillis);
+        responses = new ArrayList<>();
+    }
+
+    /**
+     * Package-private Constructor. Only for unit-test usage.
+     *
+     * @param client              client
+     * @param request             request
+     * @param asyncHandler        async handler
+     * @param retryDelayer        custom retry Delayer
+     */
+    ParsecHttpRequestRetryCallable(
+        final AsyncHttpClient client,
+        final ParsecAsyncHttpRequest request,
+        final AsyncHandler<T> asyncHandler,
+        RetryDelayer retryDelayer
+    ) {
+        this.client = client;
+        this.request = request;
+        this.asyncHandler = asyncHandler;
+        this.retryDelayer = retryDelayer;
         responses = new ArrayList<>();
     }
 
@@ -94,6 +144,11 @@ class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
             response = null;
             exception = null;
             try {
+                // when this is not the first try (i.e. is re-trying), delay an interval
+                if (retries > 0) {
+                    retryDelayer.delay();
+                }
+
                 response = executeRequest(ningRequest);
                 responses.add(response);
                 int statusCode = getStatusCode(response);
@@ -160,6 +215,37 @@ class ParsecHttpRequestRetryCallable<T> implements Callable<T> {
             return ((com.ning.http.client.Response) response).getStatusCode();
         } else {
             return -1;
+        }
+    }
+
+    /**
+     * Package-private, this is only for unit-testing.
+     * @return retryDelayer
+     */
+    RetryDelayer getRetryDelayer() {
+        return retryDelayer;
+    }
+
+    /**
+     * Extract delay mechanism as a class to let it be testable
+     */
+    public class RetryDelayer {
+        private final long retryIntervalMillis;
+
+        RetryDelayer(long retryIntervalMillis) {
+            this.retryIntervalMillis = retryIntervalMillis;
+        }
+
+        public void delay() throws InterruptedException {
+            TimeUnit.MILLISECONDS.sleep(retryIntervalMillis);
+        }
+
+        /**
+         * Package-private, this is only for unit-testing.
+         * @return retryIntervalMillis
+         */
+        long getRetryIntervalMillis() {
+            return retryIntervalMillis;
         }
     }
 }

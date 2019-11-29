@@ -24,6 +24,7 @@ import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -48,6 +49,11 @@ public class ParsecAsyncHttpClient {
      * Client.
      */
     private AsyncHttpClient client;
+
+    /**
+     * Retry interval
+     */
+    private Long retryIntervalMillis;
 
     /**
      * Ning client config.
@@ -95,7 +101,8 @@ public class ParsecAsyncHttpClient {
                 builder.cacheExpireAfterWrite,
                 builder.cacheMaximumSize,
                 builder.enableProfilingFilter,
-                builder.recordCacheStats);
+                builder.recordCacheStats,
+                builder.retryIntervalMillis);
     }
 
     /**
@@ -110,7 +117,8 @@ public class ParsecAsyncHttpClient {
         int cacheExpireAfterWrite,
         int cacheMaximumSize,
         boolean enableProfilingFilter,
-        boolean recordCacheStats
+        boolean recordCacheStats,
+        Long retryIntervalMillis
     ) {
         ParsecAsyncHttpResponseLoadingCache.Builder cacheBuilder = new ParsecAsyncHttpResponseLoadingCache.Builder(this)
                 .expireAfterWrite(cacheExpireAfterWrite, TimeUnit.SECONDS)
@@ -137,6 +145,7 @@ public class ParsecAsyncHttpClient {
         executorService = (ThreadPoolExecutor) ningClientConfig.executorService();
         client = new AsyncHttpClient(ningClientConfig);
 
+        this.retryIntervalMillis = retryIntervalMillis;
     }
 
     /**
@@ -195,29 +204,22 @@ public class ParsecAsyncHttpClient {
         final ParsecAsyncHttpRequest request,
         AsyncHandler<T> asyncHandler
     ) {
+        AsyncHandler<T> practicalAsyncHandler =
+            oldFashionProfiling? new ParsecAsyncHandlerWrapper<>(asyncHandler, request.getNingRequest()): asyncHandler;
 
-        // profile logging the old way, keep it for now..
-        ParsecAsyncHandlerWrapper<T> asyncHandlerWrapper =
-                                new ParsecAsyncHandlerWrapper<>(asyncHandler, request.getNingRequest());
-
-        if (!request.getRetryStatusCodes().isEmpty() ||
-            !request.getRetryExceptions().isEmpty()) {
+        if (request.getRetryStatusCodes().isEmpty() && request.getRetryExceptions().isEmpty()) {
             return new ParsecCompletableFuture<>(
-                executorService.submit(
-                    new ParsecHttpRequestRetryCallable<>(
-                        client,
-                        request,
-                        oldFashionProfiling ? asyncHandlerWrapper: asyncHandler
-                    )
-                )
+                client.executeRequest(request.getNingRequest(), practicalAsyncHandler)
             );
         } else {
-            return new ParsecCompletableFuture<>(
-                client.executeRequest(
-                    request.getNingRequest(),
-                    oldFashionProfiling ? asyncHandlerWrapper: asyncHandler
-                )
-            );
+            ParsecHttpRequestRetryCallable<T> retryCallable;
+            if (Objects.isNull(retryIntervalMillis)) {
+                retryCallable = new ParsecHttpRequestRetryCallable<>(client, request, practicalAsyncHandler);
+            } else {
+                retryCallable = new ParsecHttpRequestRetryCallable<>(
+                    client, request, practicalAsyncHandler, retryIntervalMillis);
+            }
+            return new ParsecCompletableFuture<>(executorService.submit(retryCallable));
         }
     }
 
@@ -490,6 +492,11 @@ public class ParsecAsyncHttpClient {
          * Cache max size.
          */
         private int cacheMaximumSize = DEFAULT_CACHE_MAX_SIZE;
+
+        /**
+         * Retry interval
+         */
+        private Long retryIntervalMillis;
 
         private boolean enableProfilingFilter = false;
 
@@ -830,6 +837,16 @@ public class ParsecAsyncHttpClient {
          */
         public Builder setCacheMaximumSize(int cacheMaximumSize) {
             this.cacheMaximumSize = cacheMaximumSize;
+            return this;
+        }
+
+        /**
+         * Set retry interval
+         * @param milliseconds the retry interval in milliseconds
+         * @return {@link ParsecAsyncHttpClient.Builder}
+         */
+        public Builder setRetryIntervalInMilliSeconds(long milliseconds) {
+            this.retryIntervalMillis = milliseconds;
             return this;
         }
     }
