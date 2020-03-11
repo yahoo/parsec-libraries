@@ -5,10 +5,12 @@ package com.yahoo.parsec.clients;
 
 import com.ning.http.client.Param;
 import com.ning.http.client.cookie.Cookie;
+import com.ning.http.util.AsyncHttpProviderUtils;
 
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -95,10 +97,23 @@ public final class ParsecHttpUtil {
         }
 
         if (ningResponse.hasResponseBody()) {
-            responseBuilder.entity(ningResponse.getResponseBody());
+            // we set default charset to utf8 if content type not specify
+            String contentType = ningResponse.getContentType();
+            String charset = parseCharsetFromContentType(contentType, StandardCharsets.UTF_8.name());
+            responseBuilder.entity(ningResponse.getResponseBody(charset));
         }
 
         ningResponse.getCookies().forEach(ningCookie -> responseBuilder.cookie(getCookie(ningCookie)));
         return responseBuilder.build();
+    }
+
+    public static String parseCharsetFromContentType(String contentType, String defaultCharset) {
+        if (contentType != null) {
+            String parseCharset = AsyncHttpProviderUtils.parseCharset(contentType);
+            if (parseCharset != null) {
+                return parseCharset;
+            }
+        }
+        return defaultCharset;
     }
 }
