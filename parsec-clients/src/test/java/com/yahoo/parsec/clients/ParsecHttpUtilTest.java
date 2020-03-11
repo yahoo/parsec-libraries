@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import javax.ws.rs.core.NewCookie;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -111,5 +112,17 @@ public class ParsecHttpUtilTest {
 
         constructor.setAccessible(true);
         constructor.newInstance();
+    }
+
+    @Test
+    public void testParseCharsetFromContentType() {
+        String iso8859 = StandardCharsets.ISO_8859_1.name();
+        String utf8 = StandardCharsets.UTF_8.name();
+
+        String charset = ParsecHttpUtil.parseCharsetFromContentType("application/json;charset=utf-8", iso8859);
+        assertTrue(utf8.equalsIgnoreCase(charset), "actual charset is " + charset);
+
+        charset = ParsecHttpUtil.parseCharsetFromContentType("application/json", utf8);
+        assertTrue(utf8.equalsIgnoreCase(charset), "actual charset is " + charset);
     }
 }
