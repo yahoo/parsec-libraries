@@ -32,6 +32,7 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'maven-publish'
     apply plugin: 'maven'
+    apply plugin: 'signing'
 
     repositories {
         mavenCentral()
@@ -52,9 +53,9 @@ subprojects {
         }
         developers {
             developer {
-                id "ec-lightyear-dev"
-                name "ec-lightyear-dev"
-                email "ec-lightyear-dev@oath.com"
+                id "parsec-maintainers"
+                name "parsec-maintainers"
+                email "parsec-maintainers@verizonmedia.com"
             }
         }
 	    scm {
