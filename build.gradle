@@ -1,14 +1,13 @@
 buildscript {
     repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+'
+        mavenCentral()
     }
 }
 
 plugins {
     id 'net.researchgate.release' version '2.5.0'
+    id 'com.bmuschko.nexus' version '2.3.1'
+    id 'io.codearte.nexus-staging' version '0.22.0'
 }
 
 release {
@@ -17,9 +16,6 @@ release {
     tagTemplate = '$name-$version'
     newVersionCommitMessage = '[Gradle Release Plugin][ci skip] new version release:'
 }
-
-ext.'ossrhUsername' = System.env.OSS_USER
-ext.'ossrhPassword' = System.env.OSS_PW
 
 wrapper {
     gradleVersion = '5.2.1'
@@ -32,97 +28,70 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'maven-publish'
     apply plugin: 'maven'
-    apply plugin: 'signing'
 
     repositories {
         mavenCentral()
-        jcenter()
     }
 }
 
+//maven central settings
+ext.'nexusUsername' = System.env.OSS_USER
+ext.'nexusPassword' = System.env.OSS_PW
+ext.'signing.keyId' = System.env.SIGNING_KEYID
+ext.'signing.password' = System.env.SIGNING_PWD
+
+//the encrypted secret key ring file is checked in and will be decrypted by travis
+ext.'signing.secretKeyRingFile' = "../maintainer-secring.gpg"
+
 subprojects {
-    apply plugin: 'com.jfrog.bintray'
-
-    def pomConfig = {
-        licenses {
-            license {
-                name "The Apache Software License, Version 2.0"
-                url "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                distribution "repo"
-            }
-        }
-        developers {
-            developer {
-                id "parsec-maintainers"
-                name "parsec-maintainers"
-                email "parsec-maintainers@verizonmedia.com"
-            }
-        }
-	    scm {
-	        connection 'scm:git:https://github.com/yahoo/parsec-libraries.git'
-	        developerConnection 'scm:git:https://github.com/yahoo/parsec-libraries.git'
-	        url 'https://github.com/yahoo/parsec-libraries/'
-	    }
-    }
-
-    bintray {
-        user = System.getenv('BINTRAY_USER_ME')
-        key = System.getenv('BINTRAY_API_KEY_ME')
-        publications = ['UnofficialPublication']
-
-        publish = true
-        override = false
-        pkg {
-            repo = bintrayRepo
-            name = project.name
-            desc = 'Parsec Libraries and Utilities'
-            websiteUrl = 'https://github.com/yahoo/parsec-libraries'
-            issueTrackerUrl = 'https://github.com/yahoo/parsec-libraries/issues'
-            userOrg = 'yahoo'
-            licenses = ['Apache-2.0']
-            vcsUrl = parsecVcsUrl
-        }
-
-        pkg.version {
-            name = version
-            gpg {
-                sign = true
-            }
-            mavenCentralSync {
-                sync = true
-                user = ossrhUsername
-                password = ossrhPassword
-            }
-        }
-    }
-
-    task javadocJar(type: Jar) {
-        classifier = 'javadoc'
-        from javadoc
-    }
-
-    task sourcesJar(type: Jar) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-
-    publishing {
-        publications {
-            UnofficialPublication(MavenPublication) {
-                from components.java
-                artifact javadocJar
-                artifact sourcesJar
-                pom.withXml {
-                    def root = asNode()
-                    root.appendNode('description', 'The Parsec Libraries provides for web service build.')
-                    root.appendNode('name', project.name)
-                    root.appendNode('url', 'https://github.com/yahoo/parsec-libraries')
-                    root.children().last() + pomConfig
+    //prepare for upload
+    modifyPom {
+        project {
+            description 'The Parsec Libraries provides for web service build.'
+            name project.name
+            url 'https://github.com/yahoo/parsec-libraries'
+            licenses {
+                license {
+                    name "The Apache Software License, Version 2.0"
+                    url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    distribution "repo"
                 }
             }
+            developers {
+                developer {
+                    id "parsec-maintainers"
+                    name "parsec-maintainers"
+                    email "parsec-maintainers@verizonmedia.com"
+                }
+            }
+            scm {
+                connection 'scm:git:https://github.com/yahoo/parsec-libraries.git'
+                developerConnection 'scm:git:https://github.com/yahoo/parsec-libraries.git'
+                url 'https://github.com/yahoo/parsec-libraries/'
+            }
         }
     }
 
-    bintrayUpload.dependsOn check
+
+    extraArchive {
+        sources = true
+        tests = true
+        javadoc = true
+    }
+
+    //for upload
+    nexus {
+        sign = true
+        repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+        snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+    }
+
+    nexusStaging {
+        //use default settings
+    }
+
+
+
+    uploadArchives.dependsOn check
     afterReleaseBuild.dependsOn check
 }
