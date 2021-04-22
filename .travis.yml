@@ -15,7 +15,7 @@ cache:
   - "$HOME/.gradle/caches/"
   - "$HOME/.gradle/wrapper/"
 after_success:
-- "./gradlew uploadArchives"
+- "./gradlew uploadArchives closeAndReleaseRepository"
 script:
 - git config --global user.email "builds@travis-ci.com"
 - git config --global user.name "Travis CI"
