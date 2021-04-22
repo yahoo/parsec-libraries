@@ -40,8 +40,9 @@ ext.'nexusPassword' = System.env.OSS_PW
 ext.'signing.keyId' = System.env.SIGNING_KEYID
 ext.'signing.password' = System.env.SIGNING_PWD
 
+
 //the encrypted secret key ring file is checked in and will be decrypted by travis
-ext.'signing.secretKeyRingFile' = "../maintainer-secring.gpg"
+ext.'signing.secretKeyRingFile' = "${project.rootDir}/maintainer-secring.gpg"
 
 subprojects {
     //prepare for upload
