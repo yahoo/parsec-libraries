@@ -19,9 +19,9 @@ cache:
 script:
 - git config --global user.email "builds@travis-ci.com"
 - git config --global user.name "Travis CI"
-- if [ "${TRAVIS_PULL_REQUEST}" == "false" ];then git checkout master;git remote set-url
-  origin "https://$GITHUBKEY@github.com/yahoo/parsec-libraries";./gradlew release;fi
-- ./gradlew release publish closeAndReleaseSonatypeStagingRepository
+##- if [ "${TRAVIS_PULL_REQUEST}" == "false" ];then git checkout master;git remote set-url
+##  origin "https://$GITHUBKEY@github.com/yahoo/parsec-libraries";./gradlew release;fi
+- if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then ./gradlew release publish closeAndReleaseSonatypeStagingRepository; fi
 env:
   global:
   ## SIGNING_KEYID
