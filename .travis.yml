@@ -21,7 +21,7 @@ script:
 - git config --global user.name "Travis CI"
 - if [ "${TRAVIS_PULL_REQUEST}" == "false" ];then git checkout master;git remote set-url
   origin "https://$GITHUBKEY@github.com/yahoo/parsec-libraries";./gradlew release;fi
-- ./gradlew --no-daemon  --no-parallel --max-workers=1 uploadArchives
+- ./gradlew publishToSonatype
 env:
   global:
   ## SIGNING_KEYID
