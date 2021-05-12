@@ -13,7 +13,7 @@ plugins {
     id "maven-publish"
     id 'net.researchgate.release' version '2.5.0'
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    id 'signing'
+
 }
 
 release {
@@ -46,12 +46,13 @@ ext.'nexusPassword' = System.env.OSS_PW
 ext.'signing.keyId' = System.env.SIGNING_KEYID
 ext.'signing.password' = System.env.SIGNING_PWD
 
-
 //the encrypted secret key ring file is checked in and will be decrypted by travis
 ext.'signing.secretKeyRingFile' = "${project.rootDir}/maintainer-secring.gpg"
 
 
 subprojects {
+    apply plugin: 'signing'
+
     def pomConfig = {
         licenses {
             license {
@@ -106,7 +107,11 @@ subprojects {
 
     }
 
-    uploadArchives.dependsOn check
+    signing {
+        sign publishing.publications
+    }
+
+
     afterReleaseBuild.dependsOn check
 }
 
