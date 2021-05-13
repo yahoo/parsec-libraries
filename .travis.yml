@@ -18,9 +18,11 @@ script:
 - git config --global user.email "builds@travis-ci.com"
 - git config --global user.name "Travis CI"
 - ./gradlew check
-##- if [ "${TRAVIS_PULL_REQUEST}" == "false" ];then git checkout master;git remote set-url
-##  origin "https://$GITHUBKEY@github.com/yahoo/parsec-libraries";./gradlew release;fi
-- if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then ./gradlew release publish closeAndReleaseSonatypeStagingRepository; fi
+
+## to avoid the "Current Git branch is "(HEAD detached at 004bae3)" and not "master"" error from the release plugin
+- if [ "${TRAVIS_PULL_REQUEST}" == "false" ];then git checkout master;git remote set-url
+  origin "https://$GITHUBKEY@github.com/yahoo/parsec-libraries";./gradlew release;fi
+- if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then ./gradlew publish closeAndReleaseSonatypeStagingRepository; fi
 env:
   global:
   ## SIGNING_KEYID
