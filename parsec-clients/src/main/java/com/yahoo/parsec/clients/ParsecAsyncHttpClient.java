@@ -87,7 +87,7 @@ public class ParsecAsyncHttpClient {
     /**
      * Unused constructor.
      */
-    ParsecAsyncHttpClient() {
+    private ParsecAsyncHttpClient() {
 
     }
 

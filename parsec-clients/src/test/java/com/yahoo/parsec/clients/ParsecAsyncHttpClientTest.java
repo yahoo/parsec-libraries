@@ -228,13 +228,6 @@ public class ParsecAsyncHttpClientTest {
     }
 
     @Test
-    public void testPackageLevelConstructor() throws Exception {
-        Constructor constructor = ParsecAsyncHttpClient.class.getDeclaredConstructor();
-        assertEquals(constructor.getModifiers(), 0);
-        constructor.newInstance();
-    }
-
-    @Test
     public void testSetAcceptAnyCertificate() throws Exception {
         // Test default value
         assertFalse(client.isAcceptAnyCertificate());

@@ -23,10 +23,10 @@ public class ParsecAsyncProgressTimerTest {
         ParsecAsyncProgressTimer.progressTime(progress, ParsecAsyncProgressTimer.TimerOpCode.TIMER_STARTTRANSFER);
         ParsecAsyncProgressTimer.progressTime(progress, ParsecAsyncProgressTimer.TimerOpCode.TIMER_TOTAL);
 
-        assertTrue(progress.getNsLookupTime() > 0);
-        assertTrue(progress.getConnectTime() > progress.getNsLookupTime());
-        assertTrue(progress.getPreTransferTime() > progress.getConnectTime());
-        assertTrue(progress.getStartTransferTime() > progress.getPreTransferTime());
-        assertTrue(progress.getTotalTime() > progress.getStartTransferTime());
+        assertTrue(progress.getNsLookupTime() >= 0);
+        assertTrue(progress.getConnectTime() >= progress.getNsLookupTime());
+        assertTrue(progress.getPreTransferTime() >= progress.getConnectTime());
+        assertTrue(progress.getStartTransferTime() >= progress.getPreTransferTime());
+        assertTrue(progress.getTotalTime() >= progress.getStartTransferTime());
     }
 }
