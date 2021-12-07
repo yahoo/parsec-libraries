@@ -1,4 +1,4 @@
-# Parsec Libraries and Utilities [![Build Status](https://travis-ci.org/yahoo/parsec-libraries.svg?branch=master)](https://travis-ci.org/yahoo/parsec-libraries)
+# Parsec Libraries and Utilities [![Build Status](https://app.travis-ci.com/yahoo/parsec-libraries.svg?branch=master)](https://app.travis-ci.com/yahoo/parsec-libraries)
 In addition to the core packages of [Parsec](https://github.com/yahoo/parsec), Parsec also provides additional supporting libraries and utilities
 that altogether help reducing more effort in building web services. Below are the libraries available:
 
