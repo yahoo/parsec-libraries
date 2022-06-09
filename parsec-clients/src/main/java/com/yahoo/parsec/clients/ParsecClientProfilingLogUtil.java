@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Map;
 
 
@@ -77,6 +78,7 @@ public final class ParsecClientProfilingLogUtil {
         // prepare log data
         //
         long now = System.currentTimeMillis();
+        Instant timeInUtcDateTime = Instant.ofEpochMilli(now);
         BigDecimal timeInSecond = new BigDecimal(now).divide(BigDecimal.valueOf(DateUtils.MILLIS_PER_SECOND));
         String contentLength = "";
         String origin = "";
@@ -104,6 +106,7 @@ public final class ParsecClientProfilingLogUtil {
         String srcUrl = "";
 
         StringBuilder stringBuilder = new StringBuilder()
+                .append(timeInUtcDateTime).append(" ")
                 .append("time=").append(timeInSecond).append(", ")
                 .append("req_url=").append(reqUrl).append(", ")
                 .append("req_host_header=").append(reqHostHeader).append(", ")
