@@ -77,9 +77,9 @@ public final class ParsecClientProfilingLogUtil {
         //
         // prepare log data
         //
-        long now = System.currentTimeMillis();
-        Instant timeInUtcDateTime = Instant.ofEpochMilli(now);
-        BigDecimal timeInSecond = new BigDecimal(now).divide(BigDecimal.valueOf(DateUtils.MILLIS_PER_SECOND));
+        Instant timeInUtcDateTime = Instant.now();
+        BigDecimal timeInSecond = new BigDecimal(timeInUtcDateTime.toEpochMilli())
+            .divide(BigDecimal.valueOf(DateUtils.MILLIS_PER_SECOND));
         String contentLength = "";
         String origin = "";
         int respCode = -1;
