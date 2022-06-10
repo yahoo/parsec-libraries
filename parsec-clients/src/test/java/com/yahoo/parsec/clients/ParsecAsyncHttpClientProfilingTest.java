@@ -61,6 +61,7 @@ public class ParsecAsyncHttpClientProfilingTest extends WireMockBaseTest {
     Map<String, Collection<String>> headers;
 
 
+    String profileLogUtcTimePattern = "\\d{1,4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{1,3}Z";
     String profileLogTimePattern = "time=\\d+.\\d+,";
     String execInfPattern = "exec_info=\\{\"namelookup_time\":\\d+,\"connect_time\":\\d+," +
             "\"pretransfer_time\":\\d+,\"starttransfer_time\":\\d+,\"total_time\":\\d+\\}";
@@ -127,7 +128,8 @@ public class ParsecAsyncHttpClientProfilingTest extends WireMockBaseTest {
                                                         respCode, reqStatus, contentLenStr);
 
         StringBuffer msgPatternBuf = new StringBuffer("^\\[TRACE\\] ");
-        msgPatternBuf.append(profileLogTimePattern)
+        msgPatternBuf.append(profileLogUtcTimePattern).append(" ")
+                .append(profileLogTimePattern)
                 .append(" req_url=").append(url).append(", ")
                 .append(fixedExpection1).append(", ")
                 .append(execInfPattern).append(", ")
