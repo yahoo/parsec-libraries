@@ -5,8 +5,7 @@ jdk:
 before_install:
 ## see https://docs.travis-ci.com/user/encrypting-filest/ on how travis encrypt/decrypt files
 ## encrypted secrect key for gpg private key for artifact sigining
-- openssl aes-256-cbc -K $encrypted_4f2072688125_key -iv $encrypted_4f2072688125_iv
-  -in maintainer-secring.gpg.enc -out maintainer-secring.gpg -d
+- if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then openssl aes-256-cbc -K $encrypted_4f2072688125_key -iv $encrypted_4f2072688125_iv -in maintainer-secring.gpg.enc -out maintainer-secring.gpg -d; fi
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
