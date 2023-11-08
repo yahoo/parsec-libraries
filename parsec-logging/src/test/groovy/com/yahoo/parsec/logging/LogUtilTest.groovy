@@ -41,7 +41,7 @@ class LogUtilTest extends Specification {
         def result = LogUtil.generateLog(null, null, null, new SimpleDataObject("key1", "value1"))
 
         then:
-        result.matches(/.* timestamp=".+", log_data=\{"key":"key1","value":"value1"\}/)
+        result.matches(/.* timestamp=".+", log_data=\{"key":"key1","value":"value1"\}/) || result.matches(/.* timestamp=".+", log_data=\{"value":"value1","key":"key1"\}/)
     }
 
     def "test generateLog with quote values should return slashed quoted values"() {
